@@ -3,6 +3,7 @@ CREATE TABLE companies (
   unique_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
   user_id INT NOT NULL,
   company_name VARCHAR(100),
+  introduction VARCHAR(1000),
   Business_registration_number VARCHAR(50) UNIQUE NOT NULL,
   contact_information VARCHAR(50),
   email VARCHAR(50) UNIQUE NOT NULL,
