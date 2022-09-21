@@ -37,19 +37,18 @@ const updatePost = async params => {
   const sub_category_name = await menuDao.selectSubCategoryName(params.sub_category_id);
 
   if(sub_category_name[0].sub_category_name === '구인'){   // 구인 게시판 게시글 수정
-    console.log('test>>>>>> ', params);
     await postDao.updateJobsPost(params);
   } 
-  // else {
-  //   await postDao.updatePost(params);
+  else {
+    await postDao.updatePost(params);
 
-  //   await postTagsDao.deletePostTags(params.post_id);
+    await postTagsDao.deletePostTags(params.post_id);
 
-  //   const tags = params.tags.split(',');
-  //     for(let i=0; i<tags.length; i++) {
-  //     await postTagsDao.insertPostTags(tags[i], params.post_id);  
-  //   }
-  // }
+    const tags = params.tags.split(',');
+      for(let i=0; i<tags.length; i++) {
+      await postTagsDao.insertPostTags(tags[i], params.post_id);  
+    }
+  }
 }
 
 // 게시글 삭제
@@ -58,4 +57,11 @@ const deletePost = async (user_id, post_id) => {
   await postDao.deletePost(user_id, post_id);
 }
 
-module.exports = { insertPost, selectPostOne, updatePost, deletePost }
+// 게시글 목록 읽기
+const selectPostList = async params => {
+  const posts = await postDao.selectPostList(params);
+
+  return posts;
+}
+
+module.exports = { insertPost, selectPostOne, updatePost, deletePost, selectPostList }

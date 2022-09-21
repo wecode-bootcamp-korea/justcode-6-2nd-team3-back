@@ -83,4 +83,35 @@ const deletePost = async (user_id, post_id) => {
   );
 }
 
-module.exports = { insertPost, insertJobsPost, selectPostOne, updatePost, updateJobsPost, deletePost }
+// 게시글 목록 읽기
+const selectPostList = async params => {
+  let query = `SELECT 
+  posts.unique_id AS post_id, 
+  users.nickname,
+  user_scores.score,
+  posts.create_at,
+  posts.title,
+  sub_category.sub_category_name,
+  (SELECT COUNT(*) FROM comments WHERE post_id = post_id) AS comment_cnt,
+  (SELECT COUNT(*) FROM post_recommend WHERE post_id = post_id) AS recommend_cnt,
+  JSON_ARRAYAGG(
+    JSON_OBJECT(
+    'tag_id', tags.unique_id,
+    'tag_name', tags.tag_name
+  )
+  ) AS tags
+  FROM posts
+  LEFT JOIN users ON posts.user_id = users.unique_id
+  LEFT JOIN sub_category ON posts.sub_category_id = sub_category.unique_id
+  LEFT JOIN user_scores ON users.unique_id = user_scores.user_id
+  LEFT JOIN post_tags ON posts.unique_id = post_tags.post_id
+  LEFT JOIN tags ON post_tags.tage_id = tags.unique_id `;
+  let condition = ``;
+  let where = `WHERE posts.main_category_id = ?`;
+
+  query = query + condition + where;
+
+  return await myDataSource.query(query, [params.main_category_id])
+}
+
+module.exports = { insertPost, insertJobsPost, selectPostOne, updatePost, updateJobsPost, deletePost, selectPostList }

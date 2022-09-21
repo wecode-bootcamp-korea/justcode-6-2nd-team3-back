@@ -62,4 +62,20 @@ const deletePost = async (req, res) => {
   }
 }
 
-module.exports = { insertPost, selectPostOne, updatePost, deletePost }
+// 게시글 목록 읽기
+const selectPostList = async (req, res) => {
+  // user_id는 토큰으로 받아오는 것으로 수정할 예정
+  const { user_id } = req.params; // 본인 작성 게시글 목록. 토큰으로 받아오는 것으로 수정할 예정
+  const { main_category_id, sub_category_id } = req.query
+
+  try{
+    const params = {user_id, main_category_id, sub_category_id};
+    const posts = await postService.selectPostList(params);
+
+    return res.status(200).json({ posts });
+  } catch (err) {
+    res.status(err.status || 500).json(err.message);
+  }
+}
+
+module.exports = { insertPost, selectPostOne, updatePost, deletePost, selectPostList }
