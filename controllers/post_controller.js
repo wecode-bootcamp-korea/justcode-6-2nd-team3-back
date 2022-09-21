@@ -3,10 +3,12 @@ const postService = require('../services/post_service');
 // 게시글 작성
 const insertPost = async (req, res) => {
   // user_id는 토큰으로 받아오는 것으로 수정할 예정
-  const { user_id, main_category_id, sub_category_id, title, content, tags } = req.body;
-  
+  const { user_id, main_category_id, sub_category_id, title, content, tags, 
+    position, career, region, contract_type, pay, manager_name, manager_tel, manager_email } = req.body;
+
   try {
-    const params = {user_id, main_category_id, sub_category_id, title, content, tags};
+    const params = {user_id, main_category_id, sub_category_id, title, content, tags,
+      position, career, region, contract_type, pay, manager_name, manager_tel, manager_email};
     
     await postService.insertPost(params);
 
@@ -32,10 +34,12 @@ const selectPostOne = async (req, res) => {
 const updatePost = async (req, res) => {
   // user_id는 토큰으로 받아오는 것으로 수정할 예정
   const { user_id, post_id } = req.params;
-  const { sub_category_id, title, content, tags } = req.body;
+  const { sub_category_id, title, content, tags,
+    position, career, region, contract_type, pay, manager_name, manager_tel, manager_email } = req.body;
 
   try{
-    const params = {user_id, post_id, sub_category_id, title, content, tags};
+    const params = {user_id, post_id, sub_category_id, title, content, tags,
+      position, career, region, contract_type, pay, manager_name, manager_tel, manager_email};
     await postService.updatePost(params);
 
     return res.status(200).json({ message: 'post update succes' });
@@ -58,4 +62,20 @@ const deletePost = async (req, res) => {
   }
 }
 
-module.exports = { insertPost, selectPostOne, updatePost, deletePost }
+// 게시글 목록 읽기
+const selectPostList = async (req, res) => {
+  // user_id는 토큰으로 받아오는 것으로 수정할 예정
+  const { user_id } = req.params; // 본인 작성 게시글 목록. 토큰으로 받아오는 것으로 수정할 예정
+  const { main_category_id, sub_category_id } = req.query
+
+  try{
+    const params = {user_id, main_category_id, sub_category_id};
+    const posts = await postService.selectPostList(params);
+
+    return res.status(200).json({ posts });
+  } catch (err) {
+    res.status(err.status || 500).json(err.message);
+  }
+}
+
+module.exports = { insertPost, selectPostOne, updatePost, deletePost, selectPostList }

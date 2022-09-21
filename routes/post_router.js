@@ -8,5 +8,6 @@ router.post('', postController.insertPost);
 router.get('/:post_id', postController.selectPostOne);
 router.patch('/:post_id/:user_id', postController.updatePost);
 router.delete('/:post_id/:user_id', postController.deletePost);
+router.get('', postController.selectPostList)
 
 module.exports = router;
