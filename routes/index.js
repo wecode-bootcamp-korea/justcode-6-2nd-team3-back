@@ -4,6 +4,7 @@ const postRouter = require('./post_router');
 const menuRouter = require('./menu_rotuer');
 const profileRouter = require("./user_profile_router");
 const tagController = require("../controllers/tag_controller");
+const recommentContorller = require("./recommend_router");
 
 const router = express.Router();
 
@@ -12,5 +13,6 @@ router.use('/posts', postRouter);
 router.use('/menus', menuRouter);
 router.use("/profile", profileRouter);
 router.get("/tags", tagController.tagSearch);
+router.use("/recommend", recommentContorller);
 
 module.exports = router;
