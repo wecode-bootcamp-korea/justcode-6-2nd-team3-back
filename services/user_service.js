@@ -14,6 +14,8 @@ const createUser = async (id, password, email, user_name, nickname, user_type) =
   const hsahedPw = bcrypt.hashSync(password, salt)
   try{
     await userDao.createUser(id, hsahedPw, email, user_name, nickname, user_type);
+    const userId = await userDao.getUser(id);
+    await userDao.createUserScore(userId.unique_id);
   }catch(err){
     console.log(err);
   }
@@ -48,6 +50,7 @@ const createCompanyUser = async (payload, image) => {
   try{
     await userDao.createUser(payload.id, hsahedPw, payload.email, payload.user_name, payload.nickname, payload.user_type);
     const userId = await userDao.getUser(payload.id);
+    await userDao.createUserScore(userId.unique_id);
     await userDao.createCompany( userId.unique_id, company_name, introduction, Business_registration_number, contact_information, company_email, image);
   }catch(err){
     console.log(err);

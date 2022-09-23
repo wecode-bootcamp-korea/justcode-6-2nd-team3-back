@@ -8,7 +8,6 @@ const getUserProfile = async (user_id)=>{
       , JSON_ARRAYAGG(
               JSON_OBJECT(
                 'tag_id', t.unique_id ,
-                'user_tag_id', ut.unique_id ,
                 'tag_name', t.tag_name  
               )
             ) as tags
