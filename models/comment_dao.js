@@ -5,6 +5,7 @@ const getPostComment = async (post_id)=>{
     ` SELECT p.unique_id  AS post_id
         , u.id AS id
         , u.unique_id AS user_id
+        , u.profile_image 
         , co.unique_id AS comment_id
         , co.content 
         , co.create_at AS comment_create_at
@@ -17,6 +18,7 @@ const getPostComment = async (post_id)=>{
                         'post_id', p.unique_id, 
                         'id' , u2.id,
                         'user_id', u2.unique_id,
+                        'profile_image', u2.profile_image,
                         'user_score', us2.score ,
                         'comment_id' , co2.unique_id,
                         'content', co2.content, 
