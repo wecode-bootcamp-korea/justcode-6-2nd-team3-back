@@ -27,7 +27,7 @@ const recommendAdd = async (req, res) => {
     const params = { token, table_type, unique_id, recommend_type }
     await recommendService.recommendAdd(params);
 
-    return res.status(201).json({ message: 'recommend add succes' });
+    return res.status(201).json({ message: 'recommend add success' });
   } catch (err) {
     res.status(err.status || 500).json(err.message);
   }
@@ -43,7 +43,7 @@ const recommendCancel = async (req, res) => {
     const params = { token, table_type, unique_id, recommend_type }
     await recommendService.recommendCancel(params);
 
-    return res.status(201).json({ message: 'recommend cancle succes' });
+    return res.status(201).json({ message: 'recommend cancle success' });
   } catch (err) {
     res.status(err.status || 500).json(err.message);
   }

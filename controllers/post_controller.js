@@ -12,7 +12,7 @@ const insertPost = async (req, res) => {
     
     await postService.insertPost(params);
 
-    return res.status(201).json({ message: 'post create succes' });
+    return res.status(201).json({ message: 'post create success' });
   } catch (err) {
     res.status(err.status || 500).json(err.message);
   }
@@ -42,7 +42,7 @@ const updatePost = async (req, res) => {
       position, career, region, contract_type, pay, manager_name, manager_tel, manager_email};
     await postService.updatePost(params);
 
-    return res.status(200).json({ message: 'post update succes' });
+    return res.status(200).json({ message: 'post update success' });
   } catch (err) {
     res.status(err.status || 500).json(err.message);
   }
@@ -57,7 +57,7 @@ const deletePost = async (req, res) => {
     const params = { token, post_id };
     await postService.deletePost(params);
 
-    return res.status(200).json({ message: 'post delete succes' });
+    return res.status(200).json({ message: 'post delete success' });
   } catch (err) {
     res.status(err.status || 500).json(err.message);
   }

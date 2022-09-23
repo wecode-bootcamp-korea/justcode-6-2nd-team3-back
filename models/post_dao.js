@@ -95,6 +95,7 @@ const selectPostList = async (params, user_id) => {
   DATE_FORMAT(posts.create_at, '%Y-%m-%d') AS create_at,
   posts.title,
   sub_category.sub_category_name,
+sub_category.sub_category_name_en,
   (SELECT COUNT(*) FROM scraps WHERE post_id = posts.unique_id) AS scraps_cnt,
   (SELECT COUNT(*) FROM comments WHERE post_id = posts.unique_id) AS comment_cnt,
   (SELECT COUNT(*) FROM post_recommend WHERE post_id = posts.unique_id) AS recommend_cnt,
@@ -159,19 +160,19 @@ const selectPostList = async (params, user_id) => {
   } 
 
   if(params.filter) {
-    if(params.filter === 1) { // 추천순
+    if(params.filter == 1) { // 추천순
       order_by = `ORDER BY recommend_cnt DESC`;
     }
 
-    if(params.filter === 2) { // 댓글순
+    if(params.filter == 2) { // 댓글순
       order_by = `ORDER BY comment_cnt DESC`;
     }
 
-    if(params.filter === 3) { // 스크랩순
+    if(params.filter == 3) { // 스크랩순
       order_by = `ORDER BY scraps_cnt DESC`;
     }
 
-    if(params.filter === 4) { // 조회수순
+    if(params.filter == 4) { // 조회수순
       order_by = `ORDER BY posts.views DESC`;
     }
   } 
