@@ -1,13 +1,25 @@
 const commentDao = require("../models/comment_dao");
 
 
-// 사용자 프로필 데이터 가져오기
+// 게시글에 댓글 불러오기
 const postComment = async (post_id) => {
     try{
         const commentList = await commentDao.getPostComment(post_id);
         for(let i =0; i<commentList.length; i++){
             const result  = JSON.parse(commentList[i].comment_in_comment)
             commentList[i].comment_in_comment = result
+        }
+        for(let i =0; i<commentList.length; i++){
+            if(commentList[i].profile_image){
+                const url = "http://localhost:8000/file"+ commentList[i].profile_image
+                commentList[i].profile_image = url
+            }  
+            for(let j =0; j<commentList[i].comment_in_comment.length; j++){
+                if(commentList[i].comment_in_comment[j].profile_image){
+                    const url = "http://localhost:8000/file"+ commentList[i].comment_in_comment[j].profile_image
+                    commentList[i].comment_in_comment[j].profile_image = url
+                }
+            }
         }
         return commentList
     }catch(err){
