@@ -17,26 +17,27 @@ const insertPost = async params => {
     await postDao.insertJobsPost(params, getUserUniqueId(params.token));
   } else {  // 일반 게시판 게시글 입력
     const post_id = await postDao.insertPost(params, getUserUniqueId(params.token));
-
-    // const tagArray  = JSON.parse(params.tags);
-    const tagArray  = params.tags;
-    if(tagArray.length>0){
-      for(let i = 0; i<tagArray.length; i++){
-        if(!tagArray[i].tag_id){
-          await userProfileDao.createTag(tagArray[i].tag_name);
-          const tagId = await userProfileDao.getTagId(tagArray[i].tag_name);
-          tagArray[i].tag_id = tagId.unique_id;
-        }
-        await postTagsDao.insertPostTags(tagArray[i].tag_id, post_id);  
-      }
-    }
   }
+
+   // const tagArray  = JSON.parse(params.tags);
+   const tagArray  = params.tags;
+   if(tagArray.length>0){
+     for(let i = 0; i<tagArray.length; i++){
+       if(!tagArray[i].tag_id){
+         await userProfileDao.createTag(tagArray[i].tag_name);
+         const tagId = await userProfileDao.getTagId(tagArray[i].tag_name);
+         tagArray[i].tag_id = tagId.unique_id;
+       }
+       await postTagsDao.insertPostTags(tagArray[i].tag_id, post_id);  
+     }
+   }
 
   await scoreDao.addUserScore(params.user_id);
 }
 
 // 게시글 세부페이지 읽기
 const selectPostOne = async (post_id) => {
+  postDao.postViewsCount(post_id);
   const post = await postDao.selectPostOne(post_id);
 
   return post;
@@ -53,19 +54,20 @@ const updatePost = async params => {
   else {
     await postDao.updatePost(params, getUserUniqueId(params.token));
 
-    await postTagsDao.deletePostTags(params.post_id);
+    
+  }
 
-    // const tagArray  = JSON.parse(params.tags);
-    const tagArray  = params.tags;
-    if(tagArray.length>0){
-      for(let i = 0; i<tagArray.length; i++){
-        if(!tagArray[i].tag_id){
-          await userProfileDao.createTag(tagArray[i].tag_name);
-          const tagId = await userProfileDao.getTagId(tagArray[i].tag_name);
-          tagArray[i].tag_id = tagId.unique_id;
-        }
-        await postTagsDao.insertPostTags(tagArray[i].tag_id, params.post_id);
+  await postTagsDao.deletePostTags(params.post_id);
+  // const tagArray  = JSON.parse(params.tags);
+  const tagArray  = params.tags;
+  if(tagArray.length>0){
+    for(let i = 0; i<tagArray.length; i++){
+      if(!tagArray[i].tag_id){
+        await userProfileDao.createTag(tagArray[i].tag_name);
+        const tagId = await userProfileDao.getTagId(tagArray[i].tag_name);
+        tagArray[i].tag_id = tagId.unique_id;
       }
+      await postTagsDao.insertPostTags(tagArray[i].tag_id, params.post_id);
     }
   }
 }
@@ -86,8 +88,8 @@ const selectPostList = async params => {
   const sub_category_name = await menuDao.selectSubCategoryName(params.sub_category_id);
   let posts = '';
 
-  if(sub_category_name[0].sub_category_name === '구인'){   // 구인 게시판 게시글 목록 조회
-    posts = await postDao.selectJobsPostList(params, user_id);
+  if(sub_category_name[0].sub_category_name === '구인'){   // 구인 게시판 게시글 목록 조회 수정 중
+    posts = await postDao.selectJobsPostList(params);
   } else {
     posts = await postDao.selectPostList(params, user_id);
   }
