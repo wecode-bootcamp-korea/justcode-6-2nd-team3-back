@@ -1,10 +1,11 @@
 const scrapsService = require('../services/scraps_service');
 
 const addPostScraps = async(req, res) => {
-  const {user_id, post_id} = req.params;
+  const { token } = req.headers;
+  const {post_id} = req.params;
 
   try {
-    const params = {user_id, post_id};
+    const params = {token, post_id};
     await scrapsService.addPostScraps(params);
 
     return res.status(201).json({ message: 'scrap add succes' });
@@ -14,10 +15,11 @@ const addPostScraps = async(req, res) => {
 }
 
 const deletePostScraps = async(req, res) => {
-  const {user_id, post_id} = req.params;
+  const { token } = req.headers;
+  const {post_id} = req.params;
 
   try {
-    const params = {user_id, post_id};
+    const params = {token, post_id};
     await scrapsService.deletePostScraps(params);
 
     return res.status(200).json({ message: 'scrap delete succes' });
@@ -28,10 +30,10 @@ const deletePostScraps = async(req, res) => {
 }
 
 const selectPostScraps = async(req, res) => {
-  const {user_id} = req.params;
+  const { token } = req.headers;
 
   try{
-    const scraps = await scrapsService.selectPostScraps(user_id);
+    const scraps = await scrapsService.selectPostScraps(token);
 
     return res.status(200).json({ scraps });
   } catch (err) {
