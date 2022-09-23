@@ -4,6 +4,7 @@ CREATE TABLE sub_category (
   main_category_id INT NOT NULL,
   sub_category_name VARCHAR(100),
   is_active TINYINT,
+  view VARCHAR(100) DEFAULT 'false',
   FOREIGN KEY (main_category_id) REFERENCES main_category(unique_id) ON UPDATE CASCADE
 );
 

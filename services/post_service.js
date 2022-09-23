@@ -10,13 +10,13 @@ const userProfileDao = require("../models/user_profile_dao");
 const insertPost = async params => { 
 
   const sub_category_name = await menuDao.selectSubCategoryName(params.sub_category_id);
-  
+  let post_id = '';
   if(sub_category_name[0].sub_category_name === '구인'){   // 구인 게시판 게시글 입력
     // 협의 or 급여 설정 값 어떻게 넘겨줄지 논의 필요.
 
     await postDao.insertJobsPost(params, getUserUniqueId(params.token));
   } else {  // 일반 게시판 게시글 입력
-    const post_id = await postDao.insertPost(params, getUserUniqueId(params.token));
+    post_id = await postDao.insertPost(params, getUserUniqueId(params.token));
   }
 
    // const tagArray  = JSON.parse(params.tags);
@@ -85,7 +85,11 @@ const selectPostList = async params => {
     user_id = getUserUniqueId(params.token);
   }
 
-  const sub_category_name = await menuDao.selectSubCategoryName(params.sub_category_id);
+  let sub_category_name = ['일반'];
+  if(params.sub_category_id) {
+    sub_category_name = await menuDao.selectSubCategoryName(params.sub_category_id);
+  }
+  
   let posts = '';
 
   if(sub_category_name[0].sub_category_name === '구인'){   // 구인 게시판 게시글 목록 조회 수정 중

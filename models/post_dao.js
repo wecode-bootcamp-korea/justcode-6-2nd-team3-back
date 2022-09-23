@@ -29,8 +29,9 @@ const selectPostOne = async (post_id) => {
     `SELECT 
     posts.unique_id,
     users.nickname,
+    users.profile_image,
     user_scores.score,
-    posts.create_at,
+    DATE_FORMAT(posts.create_at, '%Y-%m-%d') AS create_at,
     posts.title,
     posts.content,
     posts.position, 
@@ -89,8 +90,9 @@ const selectPostList = async (params, user_id) => {
   let query = `SELECT 
   posts.unique_id,
   users.nickname,
+  users.profile_image,
   user_scores.score,
-  posts.create_at,
+  DATE_FORMAT(posts.create_at, '%Y-%m-%d') AS create_at,
   posts.title,
   sub_category.sub_category_name,
   (SELECT COUNT(*) FROM scraps WHERE post_id = posts.unique_id) AS scraps_cnt,
@@ -185,6 +187,8 @@ const selectJobsPostList = async (params) => {
   posts.create_at,
   posts.title,
   companies.company_name,
+  companies.Business_registration_image,
+  DATE_FORMAT(posts.create_at, '%Y-%m-%d') AS create_at,
   posts.position,
   posts.region,
   posts.pay,
@@ -212,16 +216,9 @@ const selectJobsPostList = async (params) => {
   let group_by = `GROUP BY posts.unique_id `;
   let order_by = `ORDER BY posts.create_at DESC`;
 
-  // main_category_id, sub_category_id, search_keyword, filter, page, limit
-
   let setParams = [];
   setParams.push(params.main_category_id);
   setParams.push(params.sub_category_id);
-
-  if(user_id) {
-    condition = `WHERE posts.user_id = ? `;
-    setParams.push(user_id);
-  } 
 
   if(params.search_keyword) {
     condition = `AND posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
