@@ -13,6 +13,12 @@ const createUser = async (id, password, email, user_name, nickname, user_type)=>
   )
 }
 
+const createUserScore = async (id)=>{
+  await myDataSource.query(
+    `INSERT INTO user_scores (user_id, score) VALUES(?, 0)`, [id]
+  )
+}
+
 const createCompany = async (id, company_name, introduction, Business_registration_number, contact_information, email, Business_registration_image)=>{
   await myDataSource.query(
     `INSERT INTO companies(
@@ -128,4 +134,5 @@ module.exports = {
   , getUserByUniqueId
   , userHuman
   , updatePassword
+  , createUserScore
 };
