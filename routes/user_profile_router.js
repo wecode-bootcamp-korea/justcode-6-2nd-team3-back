@@ -20,7 +20,8 @@ const uploader = multer({storage:storage})
 const router = express.Router();
 
 router.get("/", validateToken.validateToken, userProfileController.userProfile);
-router.patch("/", validateToken.validateToken,  uploader.single('filename'), userProfileController.userProfileUpdate);
+router.patch("/image", validateToken.validateToken,  uploader.single('filename'), userProfileController.userProfileImageUpdate);
+router.patch("/", validateToken.validateToken, userProfileController.userProfileUpdate);
 
 
 
