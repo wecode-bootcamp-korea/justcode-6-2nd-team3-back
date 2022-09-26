@@ -1,33 +1,24 @@
 const userService = require("../services/user_service");
+const { validatorValues } = require("../common/validator_value");
 
 // 회원가입
 const createUser = async (req, res) => {
     const {id, password, email, user_name, nickname, user_type} = req.body
 
     const haskey = {id:false, email:false, password:false, user_name:false, nickname:false, user_type:false};
-    const requireKey = Object.keys(haskey);
-
-    Object.entries(req.body).forEach((keyValue) => {
-    const [key, value] = keyValue;
-    if (requireKey.includes(key) && value){
-        haskey[key] = true;
-    }
-    })
-    const haskeyArray = Object.entries(haskey);
-    for(let i =0; i<haskeyArray.length;i++){
-    const [key, value] = haskeyArray[i];
-    if(!value){
-    res.status(400).json({ message: `${key}이/가 없습니다` })
-        return;
-    }
-    }
+    
     if(user_type == 1 ){
+        let err = validatorValues(req.body, haskey);
+        if(err) {
+            return res.status(400).json({ message: err });
+        }
+
         try{
             const result = await userService.createUser(id, password, email, user_name, nickname, user_type);
-            res.status(201).json({ message: "userCreated" })
+            return res.status(201).json({ message: "userCreated" })
         }catch(err){
             console.log(err)
-            res.status(err.statusCode || 500).json({ message: err.message });
+            return res.status(err.statusCode || 500).json({ message: err.message });
         }
 
     }else if(user_type == 2){
@@ -35,21 +26,10 @@ const createUser = async (req, res) => {
         const {company_name, introduction, Business_registration_number, contact_information, company_email} = req.body
 
         const haskey = {company_name:false, Business_registration_number:false, contact_information:false, company_email:false};
-        const requireKey = Object.keys(haskey);
 
-        Object.entries(req.body).forEach((keyValue) => {
-        const [key, value] = keyValue;
-        if (requireKey.includes(key) && value){
-            haskey[key] = true;
-        }
-        })
-        const haskeyArray = Object.entries(haskey);
-        for(let i =0; i<haskeyArray.length;i++){
-        const [key, value] = haskeyArray[i];
-        if(!value){
-            res.status(400).json({ message: `${key}이/가 없습니다` })
-            return;
-        }
+        let err = validatorValues(req.body, haskey);
+        if(err) {
+            return res.status(400).json({ message: err });
         }
 
         try{
@@ -58,10 +38,10 @@ const createUser = async (req, res) => {
                 image = "/"+req.file.filename;
             }
             const result = await userService.createCompanyUser(req.body, image);
-            res.status(201).json({ message: "user/companyCreated" })
+            return res.status(201).json({ message: "user/companyCreated" })
         }catch(err){
             console.log(err)
-            res.status(err.statusCode || 500).json({ message: err.message });
+            return res.status(err.statusCode || 500).json({ message: err.message });
         }
     }
 }
@@ -73,27 +53,17 @@ const loginUser = async (req, res) => {
     const haskey = { id: false, password: false };
     const requireKey = Object.keys(haskey);
 
-    Object.entries(req.body).forEach((keyValue) => {
-        const [key, value] = keyValue;
-        if (requireKey.includes(key) && value) {
-        haskey[key] = true;
-    }
-    });
-    const haskeyArray = Object.entries(haskey);
-    for (let i = 0; i < haskeyArray.length; i++) {
-        const [key, value] = haskeyArray[i];
-        if (!value) {
-        res.status(400).json({ message: `${key}이/가 없습니다` });
-        return;
-    }
+    let err = validatorValues(req.body, haskey);
+    if(err) {
+        return res.status(400).json({ message: err });
     }
 
     try {
         const result = await userService.loginUser(id, password);
-        res.status(201).json(result);
+        return res.status(201).json(result);
     } catch (err) {
         console.log(err);
-        res.status(err.statusCode || 500).json({ message: err.message });
+        return res.status(err.statusCode || 500).json({ message: err.message });
     }
 };
 
@@ -107,10 +77,10 @@ const userDoNotUse = async (req, res) => {
 
     try{
         await userService.userDoNotUse(unique_id);
-        res.status(200).json({ message: "success_userDoNotUse" })
+        return res.status(200).json({ message: "success_userDoNotUse" })
     }catch(err){
         console.log(err);
-        res.status(err.statusCode || 500).json({ message: err.message });
+        return res.status(err.statusCode || 500).json({ message: err.message });
     }
 };
 
@@ -123,30 +93,20 @@ const changePassword = async (req, res) => {
         res.status(400).json({ message: `user id 이/가 없습니다` })
         return;
     }
-    const haskey = { password: false, newPassword: false };
-    const requireKey = Object.keys(haskey);
 
-    Object.entries(req.body).forEach((keyValue) => {
-        const [key, value] = keyValue;
-        if (requireKey.includes(key) && value) {
-        haskey[key] = true;
+    const haskey = { password: false, newPassword: false };
+
+    let err = validatorValues(req.body, haskey);
+    if(err) {
+        return res.status(400).json({ message: err });
     }
-    });
-    const haskeyArray = Object.entries(haskey);
-    for (let i = 0; i < haskeyArray.length; i++) {
-        const [key, value] = haskeyArray[i];
-        if (!value) {
-        res.status(400).json({ message: `${key}이/가 없습니다` });
-        return;
-    }
-    }
-    
+
     try {
         const result = await userService.changePassword(unique_id, password, newPassword);
-        res.status(200).json({ message: "success_changePassword" })
+        return res.status(200).json({ message: "success_changePassword" })
     } catch (err) {
         console.log(err);
-        res.status(err.statusCode || 500).json({ message: err.message });
+        return res.status(err.statusCode || 500).json({ message: err.message });
     }
 };
 

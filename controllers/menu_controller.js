@@ -12,7 +12,6 @@ const selectMainCategory = async (req, res) => {
 
 const selectSubCategory = async (req, res) => {
   const { main_category_id } = req.params;
-  console.log('main_category_id >>>>> ', main_category_id);
   try {
     const sub_category = await menuService.selectSubCategory(main_category_id);
 

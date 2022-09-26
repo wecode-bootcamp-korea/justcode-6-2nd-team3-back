@@ -10,7 +10,7 @@ const selectMainCategory = async () => {
 
 const selectSubCategory = async (main_category_id) => {
   const sub_category = await myDataSource.query(
-    `SELECT unique_id, main_category_id, sub_category_name, view FROM sub_category WHERE main_category_id= ?`,
+    `SELECT unique_id, main_category_id, sub_category_name, path FROM sub_category WHERE main_category_id= ?`,
     [main_category_id]
   )
   

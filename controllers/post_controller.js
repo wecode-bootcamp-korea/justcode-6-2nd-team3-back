@@ -1,16 +1,21 @@
-const postService = require('../services/post_service');
+const postService = require("../services/post_service");
+const { validatorValues } = require("../common/validator_value");
+const postDto = require("../dto/post_dto")
 
 // 게시글 작성
 const insertPost = async (req, res) => {
-  const { token } = req.headers;
-  const { main_category_id, sub_category_id, title, content, tags, 
-    position, career, region, contract_type, pay, manager_name, manager_tel, manager_email } = req.body;
+  const {unique_id} =  req.foundUser;
+  postDto.setPostDto(req.body);
 
-  try {
-    const params = {token, main_category_id, sub_category_id, title, content, tags,
-      position, career, region, contract_type, pay, manager_name, manager_tel, manager_email};
-    
-    await postService.insertPost(params);
+  const params = postDto.getPostValue();
+  let err = validatorValues(params, postDto.getPostHaskey());
+
+  if(err) {
+        return res.status(400).json({ message: err });
+  }
+
+  try {  
+    await postService.insertPost(params, unique_id);
 
     return res.status(201).json({ message: 'post create success' });
   } catch (err) {
@@ -32,15 +37,18 @@ const selectPostOne = async (req, res) => {
 
 // 게시글 수정
 const updatePost = async (req, res) => {
-  const { token } = req.headers;
-  const { post_id } = req.params;
-  const { sub_category_id, title, content, tags,
-    position, career, region, contract_type, pay, manager_name, manager_tel, manager_email } = req.body;
+  const {unique_id} =  req.foundUser;
+  postDto.setPostDto(req.body);
+
+  const params = postDto.getPostValue();
+  let err = validatorValues(params, postDto.getPostHaskey());
+
+  if(err) {
+        return res.status(400).json({ message: err });
+  }
 
   try{
-    const params = {token, post_id, sub_category_id, title, content, tags,
-      position, career, region, contract_type, pay, manager_name, manager_tel, manager_email};
-    await postService.updatePost(params);
+    await postService.updatePost(params, unique_id);
 
     return res.status(200).json({ message: 'post update success' });
   } catch (err) {
@@ -50,11 +58,11 @@ const updatePost = async (req, res) => {
 
 // 게시글 삭제
 const deletePost = async (req, res) => {
-  const { token } = req.headers;
+  const {unique_id} =  req.foundUser;
   const { post_id } = req.params;
 
   try{
-    const params = { token, post_id };
+    const params = {unique_id, post_id};
     await postService.deletePost(params);
 
     return res.status(200).json({ message: 'post delete success' });
@@ -66,14 +74,14 @@ const deletePost = async (req, res) => {
 
 // 게시글 목록 읽기
 const selectPostList = async (req, res) => {
-  const { token } = req.headers;
+  const { authorization } = req.headers;
   const { main_category_id, sub_category_id, search_keyword, filter, page, limit} = req.query
 
   try{
-    const params = {token, main_category_id, sub_category_id, search_keyword, filter, page, limit};
+    const params = {authorization, main_category_id, sub_category_id, search_keyword, filter, page, limit};
     const posts = await postService.selectPostList(params);
 
-    return res.status(200).json({ posts });
+    return res.status(200).json( { posts } );
   } catch (err) {
     res.status(err.status || 500).json(err.message);
   }
