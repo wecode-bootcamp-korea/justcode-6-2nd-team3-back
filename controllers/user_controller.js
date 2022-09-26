@@ -22,7 +22,6 @@ const createUser = async (req, res) => {
         }
 
     }else if(user_type == 2){
-        // 사업자등록증 이미지 첨부 필수 값으로 받지 않음 필요하면 수정하기
         const {company_name, introduction, Business_registration_number, contact_information, company_email} = req.body
 
         const haskey = {company_name:false, Business_registration_number:false, contact_information:false, company_email:false};
@@ -33,11 +32,7 @@ const createUser = async (req, res) => {
         }
 
         try{
-            let image="";
-            if(req.file){            
-                image = "/"+req.file.filename;
-            }
-            const result = await userService.createCompanyUser(req.body, image);
+            const result = await userService.createCompanyUser(req.body);
             return res.status(201).json({ message: "user/companyCreated" })
         }catch(err){
             console.log(err)
