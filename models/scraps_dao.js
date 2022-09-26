@@ -1,16 +1,16 @@
 const { myDataSource } = require('./typeorm');
 
-const addPostScraps = async params => {
+const addPostScraps = async (post_id, user_id) => {
   await myDataSource.query(
     `INSERT INTO scraps(user_id, post_id) VALUES(?, ?)`,
-    [params.user_id, params.post_id]
+    [user_id, post_id]
   );
 }
 
-const deletePostScraps = async params => {
+const deletePostScraps = async (post_id, user_id) => {
   await myDataSource.query(
     `DELETE FROM scraps WHERE user_id = ? AND post_id = ?`,
-    [params.user_id, params.post_id]
+    [user_id, post_id]
   )
 }
 
