@@ -105,4 +105,21 @@ const changePassword = async (req, res) => {
     }
 };
 
-module.exports = { loginUser, createUser, userDoNotUse, changePassword};
+const getme = async (req, res) => {
+    const { unique_id } =  req.foundUser; 
+
+    if(!unique_id){
+        res.status(400).json({ message: `user id 이/가 없습니다` })
+        return;
+    }
+
+    try {
+        const result = await userService.getme(unique_id);
+        return res.status(200).json({ user:result, message: "success_getme" })
+    } catch (err) {
+        console.log(err);
+        return res.status(err.statusCode || 500).json({ message: err.message });
+    }
+};
+
+module.exports = { loginUser, createUser, userDoNotUse, changePassword, getme};
