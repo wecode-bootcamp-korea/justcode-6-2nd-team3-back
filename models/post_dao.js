@@ -89,6 +89,7 @@ const deletePost = async (user_id, post_id) => {
 const selectPostList = async (params, user_id) => {
   let query = `SELECT 
   posts.unique_id,
+  users.unique_id as user_id,
   users.nickname,
   users.profile_image,
   user_scores.score,

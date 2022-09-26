@@ -71,16 +71,16 @@ const updatePost = async (params, user_id) => {
 }
 
 // 게시글 삭제
-const deletePost = async (params, user_id) => {
-  await postTagsDao.deletePostTags(params.post_id);
-  await postDao.deletePost(user_id, params.post_id);
+const deletePost = async (post_id, user_id) => {
+  await postTagsDao.deletePostTags(post_id);
+  await postDao.deletePost(user_id, post_id);
 }
 
 // 게시글 목록 읽기
 const selectPostList = async params => {
   let user_id = "";
-  if(params.token) {
-    user_id = jwt.verify(token, 'server_made_secret_key').userId;
+  if(params.authorization ) {
+    user_id = jwt.verify(params.authorization, 'server_made_secret_key').userId;
   }
 
   let sub_category_name = ['일반'];
