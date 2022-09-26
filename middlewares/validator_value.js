@@ -1,4 +1,4 @@
-const validatorValues = async (body, haskey) => {
+const validatorValues = (body, haskey, res) => {
   const requireKey = Object.keys(haskey);
 
   Object.entries(body).forEach((keyValue) => {
@@ -9,14 +9,15 @@ const validatorValues = async (body, haskey) => {
   })
 
   const haskeyArray = Object.entries(haskey);
-
+  let err = '';
   for(let i =0; i<haskeyArray.length;i++){
       const [key, value] = haskeyArray[i];
       if(!value){
-          res.status(400).json({ message: `${key}이/가 없습니다` })
-          return;
+        err = key + '이/가 없습니다';
       }
   }
+
+  return err;
 };
 
 module.exports = { validatorValues };

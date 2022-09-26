@@ -7,15 +7,18 @@ const createUser = async (req, res) => {
 
     const haskey = {id:false, email:false, password:false, user_name:false, nickname:false, user_type:false};
     
-    validatorValues(req.body, haskey);
- 
     if(user_type == 1 ){
+        let err = validatorValues(req.body, haskey, res);
+        if(err) {
+            return res.status(400).json({ message: err });
+        }
+
         try{
             const result = await userService.createUser(id, password, email, user_name, nickname, user_type);
-            res.status(201).json({ message: "userCreated" })
+            return res.status(201).json({ message: "userCreated" })
         }catch(err){
             console.log(err)
-            res.status(err.statusCode || 500).json({ message: err.message });
+            return res.status(err.statusCode || 500).json({ message: err.message });
         }
 
     }else if(user_type == 2){
@@ -24,7 +27,10 @@ const createUser = async (req, res) => {
 
         const haskey = {company_name:false, Business_registration_number:false, contact_information:false, company_email:false};
 
-        validatorValues(req.body, haskey);
+        let err = validatorValues(req.body, haskey, res);
+        if(err) {
+            return res.status(400).json({ message: err });
+        }
 
         try{
             let image="";
@@ -32,10 +38,10 @@ const createUser = async (req, res) => {
                 image = "/"+req.file.filename;
             }
             const result = await userService.createCompanyUser(req.body, image);
-            res.status(201).json({ message: "user/companyCreated" })
+            return res.status(201).json({ message: "user/companyCreated" })
         }catch(err){
             console.log(err)
-            res.status(err.statusCode || 500).json({ message: err.message });
+            return res.status(err.statusCode || 500).json({ message: err.message });
         }
     }
 }
@@ -47,14 +53,17 @@ const loginUser = async (req, res) => {
     const haskey = { id: false, password: false };
     const requireKey = Object.keys(haskey);
 
-    validatorValues(req.body, haskey);
+    let err = validatorValues(req.body, haskey, res);
+    if(err) {
+        return res.status(400).json({ message: err });
+    }
 
     try {
         const result = await userService.loginUser(id, password);
-        res.status(201).json(result);
+        return res.status(201).json(result);
     } catch (err) {
         console.log(err);
-        res.status(err.statusCode || 500).json({ message: err.message });
+        return res.status(err.statusCode || 500).json({ message: err.message });
     }
 };
 
@@ -68,10 +77,10 @@ const userDoNotUse = async (req, res) => {
 
     try{
         await userService.userDoNotUse(unique_id);
-        res.status(200).json({ message: "success_userDoNotUse" })
+        return res.status(200).json({ message: "success_userDoNotUse" })
     }catch(err){
         console.log(err);
-        res.status(err.statusCode || 500).json({ message: err.message });
+        return res.status(err.statusCode || 500).json({ message: err.message });
     }
 };
 
@@ -87,14 +96,17 @@ const changePassword = async (req, res) => {
 
     const haskey = { password: false, newPassword: false };
 
-    validatorValues(req.body, haskey);
+    let err = validatorValues(req.body, haskey, res);
+    if(err) {
+        return res.status(400).json({ message: err });
+    }
 
     try {
         const result = await userService.changePassword(unique_id, password, newPassword);
-        res.status(200).json({ message: "success_changePassword" })
+        return res.status(200).json({ message: "success_changePassword" })
     } catch (err) {
         console.log(err);
-        res.status(err.statusCode || 500).json({ message: err.message });
+        return res.status(err.statusCode || 500).json({ message: err.message });
     }
 };
 
