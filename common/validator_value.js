@@ -1,4 +1,4 @@
-const validatorValues = (body, haskey, res) => {
+const validatorValues = (body, haskey) => {
   const requireKey = Object.keys(haskey);
 
   Object.entries(body).forEach((keyValue) => {

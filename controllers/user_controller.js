@@ -1,5 +1,5 @@
 const userService = require("../services/user_service");
-const { validatorValues } = require("../middlewares/validator_value");
+const { validatorValues } = require("../common/validator_value");
 
 // 회원가입
 const createUser = async (req, res) => {
@@ -8,7 +8,7 @@ const createUser = async (req, res) => {
     const haskey = {id:false, email:false, password:false, user_name:false, nickname:false, user_type:false};
     
     if(user_type == 1 ){
-        let err = validatorValues(req.body, haskey, res);
+        let err = validatorValues(req.body, haskey);
         if(err) {
             return res.status(400).json({ message: err });
         }
@@ -27,7 +27,7 @@ const createUser = async (req, res) => {
 
         const haskey = {company_name:false, Business_registration_number:false, contact_information:false, company_email:false};
 
-        let err = validatorValues(req.body, haskey, res);
+        let err = validatorValues(req.body, haskey);
         if(err) {
             return res.status(400).json({ message: err });
         }
@@ -53,7 +53,7 @@ const loginUser = async (req, res) => {
     const haskey = { id: false, password: false };
     const requireKey = Object.keys(haskey);
 
-    let err = validatorValues(req.body, haskey, res);
+    let err = validatorValues(req.body, haskey);
     if(err) {
         return res.status(400).json({ message: err });
     }
@@ -96,7 +96,7 @@ const changePassword = async (req, res) => {
 
     const haskey = { password: false, newPassword: false };
 
-    let err = validatorValues(req.body, haskey, res);
+    let err = validatorValues(req.body, haskey);
     if(err) {
         return res.status(400).json({ message: err });
     }

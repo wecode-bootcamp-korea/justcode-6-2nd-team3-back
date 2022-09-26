@@ -11,10 +11,8 @@ INSERT INTO sub_category(main_category_id, sub_category_name, is_active) VALUES
 (3, '홍보&광고', 1),
 (4, '공지사항', 1),
 (4, '아카이브', 1),
-(5, '구인 계약직', 1),
-(5, '구인 정규직', 1),
-(5, '구직', 1),
-(5, '좋은회사/나쁜회사', 1);
+(5, '구인 ', 1),
+(5, '구직', 1);
 
 -- migrate:down
 DELETE FROM sub_category;

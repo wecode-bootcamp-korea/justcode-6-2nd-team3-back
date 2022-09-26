@@ -19,13 +19,13 @@ const getRecommendCount = async (req, res) => {
 
 // 댓글&게시글 추천/비추천 
 const recommendAdd = async (req, res) => {
-  const { token } = req.headers;
-  const { unique_id } = req.params;
+  const { unique_id } =  req.foundUser;
+  const { udi } = req.params;
   const { table_type, recommend_type } = req.query;
 
   try {
-    const params = { token, table_type, unique_id, recommend_type }
-    await recommendService.recommendAdd(params);
+    const params = { table_type, udi, recommend_type }
+    await recommendService.recommendAdd(params, unique_id);
 
     return res.status(201).json({ message: 'recommend add success' });
   } catch (err) {
@@ -35,13 +35,13 @@ const recommendAdd = async (req, res) => {
 
 // 댓글&게시글 추천/비추천 취소
 const recommendCancel = async (req, res) => {
-  const { token } = req.headers;
-  const { unique_id } = req.params;
+  const { unique_id } =  req.foundUser;
+  const { udi } = req.params;
   const { table_type, recommend_type } = req.query;
 
   try {
-    const params = { token, table_type, unique_id, recommend_type }
-    await recommendService.recommendCancel(params);
+    const params = { table_type, udi, recommend_type }
+    await recommendService.recommendCancel(params, unique_id);
 
     return res.status(201).json({ message: 'recommend cancle success' });
   } catch (err) {
