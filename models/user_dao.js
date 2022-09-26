@@ -119,6 +119,16 @@ const updatePassword = async (id, hsahedPw) => {
   );
 };
 
+const getme = async (user_id)=>{
+  return await myDataSource.query(
+  ` SELECT u.unique_id 
+      , u.id 
+      , u.user_type 
+  FROM users u 
+  WHERE u.unique_id  =  ?;`
+  , [user_id])
+}
+
 module.exports = {
   createUser
   , createCompany
@@ -134,4 +144,5 @@ module.exports = {
   , userHuman
   , updatePassword
   , createUserScore
+  , getme
 };

@@ -138,6 +138,14 @@ const changePassword = async (id, password, newPassword) => {
   }
 };
 
+const getme = async (user_id)=>{
+  try{
+    return await userDao.getme(user_id);
+  }catch(err){
+    console.log(err)
+  }
+}
+
 module.exports = { 
   loginUser
   , createUser
@@ -145,4 +153,5 @@ module.exports = {
   , getUserByUniqueId
   , userDoNotUse
   , changePassword
+  , getme
 };
