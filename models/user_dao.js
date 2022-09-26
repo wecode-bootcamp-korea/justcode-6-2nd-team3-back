@@ -19,7 +19,7 @@ const createUserScore = async (id)=>{
   )
 }
 
-const createCompany = async (id, company_name, introduction, Business_registration_number, contact_information, email, Business_registration_image)=>{
+const createCompany = async (id, company_name, introduction, Business_registration_number, contact_information, email)=>{
   await myDataSource.query(
     `INSERT INTO companies(
       user_id
@@ -27,9 +27,8 @@ const createCompany = async (id, company_name, introduction, Business_registrati
       , introduction
       , Business_registration_number
       , contact_information
-      , email
-      , Business_registration_image) 
-    VALUES (?,?,?,?,?,?,?)`, [id, company_name, introduction, Business_registration_number, contact_information, email, Business_registration_image]
+      , email) 
+    VALUES (?,?,?,?,?,?)`, [id, company_name, introduction, Business_registration_number, contact_information, email]
   )
 }
 

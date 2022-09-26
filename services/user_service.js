@@ -21,7 +21,7 @@ const createUser = async (id, password, email, user_name, nickname, user_type) =
   }
 }
 
-const createCompanyUser = async (payload, image) => {
+const createCompanyUser = async (payload) => {
   const result = await isUnique(payload.id, payload.email, payload.nickname);
   if(result){
     const error = new Error(result.message);
@@ -51,7 +51,7 @@ const createCompanyUser = async (payload, image) => {
     await userDao.createUser(payload.id, hsahedPw, payload.email, payload.user_name, payload.nickname, payload.user_type);
     const userId = await userDao.getUser(payload.id);
     await userDao.createUserScore(userId.unique_id);
-    await userDao.createCompany( userId.unique_id, company_name, introduction, Business_registration_number, contact_information, company_email, image);
+    await userDao.createCompany( userId.unique_id, company_name, introduction, Business_registration_number, contact_information, company_email);
   }catch(err){
     console.log(err);
   }
