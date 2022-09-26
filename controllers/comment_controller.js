@@ -1,25 +1,14 @@
 const commentService = require("../services/comment_service");
+const { validatorValues } = require("../common/validator_value");
 
 // 게시물에 댓글 불러오기
 const postComment = async (req, res) => {
     const {post} = req.query
 
     const haskey = {post:false}; 
-    const requireKey = Object.keys(haskey);
-
-    Object.entries(req.query).forEach((keyValue) => {
-    const [key, value] = keyValue;
-    if (requireKey.includes(key) && value){
-        haskey[key] = true;
-    }
-    })
-    const haskeyArray = Object.entries(haskey);
-    for(let i =0; i<haskeyArray.length;i++){
-    const [key, value] = haskeyArray[i];
-    if(!value){
-        res.status(400).json({ message: `${key} 이/가 없습니다` })
-        return;
-    }
+    let err = validatorValues(req.query, haskey);
+    if(err) {
+        return res.status(400).json({ message: err });
     }
 
     try{
@@ -42,21 +31,9 @@ const commentAdd = async (req, res) => {
     }
     
     const haskey = {post_id:false, content:false}; 
-    const requireKey = Object.keys(haskey);
-
-    Object.entries(req.body).forEach((keyValue) => {
-    const [key, value] = keyValue;
-    if (requireKey.includes(key) && value){
-        haskey[key] = true;
-    }
-    })
-    const haskeyArray = Object.entries(haskey);
-    for(let i =0; i<haskeyArray.length;i++){
-    const [key, value] = haskeyArray[i];
-    if(!value){
-        res.status(400).json({ message: `${key} 이/가 없습니다` })
-        return;
-    }
+    let err = validatorValues(req.body, haskey);
+    if(err) {
+        return res.status(400).json({ message: err });
     }
 
     let level = 0;
@@ -86,21 +63,9 @@ const commentUpdate = async (req, res) => {
     }
 
     const haskey = {comment_id:false, content:false}; 
-    const requireKey = Object.keys(haskey);
-
-    Object.entries(req.body).forEach((keyValue) => {
-    const [key, value] = keyValue;
-    if (requireKey.includes(key) && value){
-        haskey[key] = true;
-    }
-    })
-    const haskeyArray = Object.entries(haskey);
-    for(let i =0; i<haskeyArray.length;i++){
-    const [key, value] = haskeyArray[i];
-    if(!value){
-        res.status(400).json({ message: `${key} 이/가 없습니다` })
-        return;
-    }
+    let err = validatorValues(req.body, haskey);
+    if(err) {
+        return res.status(400).json({ message: err });
     }
 
     try{
@@ -123,21 +88,9 @@ const commentDelete = async (req, res) => {
     }
 
     const haskey = {comment_id:false}; 
-    const requireKey = Object.keys(haskey);
-
-    Object.entries(req.body).forEach((keyValue) => {
-    const [key, value] = keyValue;
-    if (requireKey.includes(key) && value){
-        haskey[key] = true;
-    }
-    })
-    const haskeyArray = Object.entries(haskey);
-    for(let i =0; i<haskeyArray.length;i++){
-    const [key, value] = haskeyArray[i];
-    if(!value){
-        res.status(400).json({ message: `${key} 이/가 없습니다` })
-        return;
-    }
+    let err = validatorValues(req.body, haskey);
+    if(err) {
+        return res.status(400).json({ message: err });
     }
 
     try{

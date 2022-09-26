@@ -3,7 +3,7 @@ const { myDataSource } = require('./typeorm');
 const getTopWriters = async ()=>{
     return await myDataSource.query(`
     SELECT ANY_VALUE(p.user_id) AS user_id
-            , ANY_VALUE(u.user_name) AS user_name
+            , ANY_VALUE(u.nickname) AS nickname
             , ANY_VALUE(u.profile_image) AS profile_image
             , COUNT(p.user_id) AS cnt
         FROM posts p 
