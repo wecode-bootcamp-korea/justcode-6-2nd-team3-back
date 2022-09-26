@@ -1,4 +1,5 @@
 const postService = require('../services/post_service');
+const { validatorValues } = require("../middlewares/validator_value");
 
 // 게시글 작성
 const insertPost = async (req, res) => {
@@ -6,11 +7,15 @@ const insertPost = async (req, res) => {
   const { main_category_id, sub_category_id, title, content, tags, 
     position, career, region, contract_type, pay, manager_name, manager_tel, manager_email } = req.body;
 
+  if (errors) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const params = {token, main_category_id, sub_category_id, title, content, tags,
       position, career, region, contract_type, pay, manager_name, manager_tel, manager_email};
     
-    await postService.insertPost(params);
+    // await postService.insertPost(params);
 
     return res.status(201).json({ message: 'post create succes' });
   } catch (err) {
