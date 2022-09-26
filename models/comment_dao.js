@@ -4,6 +4,7 @@ const getPostComment = async (post_id)=>{
     const result =  await myDataSource.query(
     ` SELECT p.unique_id  AS post_id
         , u.id AS id
+        , u.nickname
         , u.unique_id AS user_id
         , u.profile_image 
         , co.unique_id AS comment_id
@@ -17,6 +18,7 @@ const getPostComment = async (post_id)=>{
                         JSON_OBJECT(
                         'post_id', p.unique_id, 
                         'id' , u2.id,
+                        'nickname' , u2.nickname,
                         'user_id', u2.unique_id,
                         'profile_image', u2.profile_image,
                         'user_score', us2.score ,

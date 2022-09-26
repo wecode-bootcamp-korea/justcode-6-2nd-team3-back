@@ -1,4 +1,5 @@
 const userProfileService = require("../services/user_profile_service");
+const { validatorValues } = require("../common/validator_value");
 
 // 사용자 프로필 불러오기
 const userProfile = async (req, res) => {
@@ -28,21 +29,9 @@ const userProfileUpdate = async (req, res) => {
     }
     
     const haskey = {user_name:false, nickname:false, tags:false}; 
-    const requireKey = Object.keys(haskey);
-
-    Object.entries(req.body).forEach((keyValue) => {
-    const [key, value] = keyValue;
-    if (requireKey.includes(key) && value){
-        haskey[key] = true;
-    }
-    })
-    const haskeyArray = Object.entries(haskey);
-    for(let i =0; i<haskeyArray.length;i++){
-    const [key, value] = haskeyArray[i];
-    if(!value){
-        res.status(400).json({ message: `${key} 이/가 없습니다` })
-        return;
-    }
+    let err = validatorValues(req.body, haskey);
+    if(err) {
+        return res.status(400).json({ message: err });
     }
 
     try{
