@@ -1,6 +1,5 @@
 const rankingService = require("../services/ranking_service");
 
-// 게시물에 댓글 불러오기
 const topWriters = async (req, res) => {
     try{
         const result = await rankingService.topWriters();
@@ -21,6 +20,28 @@ const topTags = async (req, res) => {
         res.status(err.statusCode || 500).json({message:err.message})
     }
 
+}
+
+const editorChoice = async (req, res) => {
+    try{
+        const result = await rankingService.editorChoice();
+        res.status(200).json({editorChoice : result, message: "success_getTopTags" })
+    }catch(err){
+        console.log(err);
+        res.status(err.statusCode || 500).json({message:err.message})
+    }
+
 } 
 
-module.exports = {topWriters, topTags};
+const weeklyBest = async (req, res) => {
+    try{
+        const result = await rankingService.weeklyBest();
+        res.status(200).json({weeklyBest : result, message: "success_getTopTags" })
+    }catch(err){
+        console.log(err);
+        res.status(err.statusCode || 500).json({message:err.message})
+    }
+
+} 
+
+module.exports = {topWriters, topTags, editorChoice, weeklyBest};
