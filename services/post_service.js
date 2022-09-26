@@ -5,6 +5,7 @@ const postTagsDao = require('../models/post_tags_dao');
 const menuDao = require('../models/menu_dao');
 const scoreDao = require('../models/user_scores_dao');
 const userProfileDao = require("../models/user_profile_dao");
+const { Cursor } = require('typeorm');
 
 // 게시글 작성
 const insertPost = async (params, user_id) => { 
@@ -78,6 +79,16 @@ const deletePost = async (post_id, user_id) => {
 
 // 게시글 목록 읽기
 const selectPostList = async params => {
+
+  const page_count = await postDao.getPostCount(params);
+  
+  let corsur = '';
+  if(params.page) {
+    if(params.page != 1) {
+      corsur = page_count[0].post_count - ((params.page-1) * params.limit) + 1;
+    } 
+  }
+
   let user_id = "";
   if(params.authorization ) {
     user_id = jwt.verify(params.authorization, 'server_made_secret_key').userId;
@@ -91,9 +102,9 @@ const selectPostList = async params => {
   let posts = '';
 
   if(sub_category_name[0].sub_category_name === '구인'){   // 구인 게시판 게시글 목록 조회 수정 중
-    posts = await postDao.selectJobsPostList(params);
+    posts = await postDao.selectJobsPostList(params, corsur);
   } else {
-    posts = await postDao.selectPostList(params, user_id);
+    posts = await postDao.selectPostList(params, user_id, corsur);
   }
   return posts;
 }

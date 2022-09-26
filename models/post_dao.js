@@ -85,9 +85,104 @@ const deletePost = async (user_id, post_id) => {
   );
 }
 
+// 게시글 목록 갯수 가지고오기
+const getPostCount = async (params, user_id) => {
+ let query = `
+ SELECT
+ COUNT(DISTINCT( posts.unique_id)) AS post_count
+ FROM posts
+ LEFT JOIN users ON posts.user_id = users.unique_id
+ LEFT JOIN sub_category ON posts.sub_category_id = sub_category.unique_id
+ LEFT JOIN user_scores ON users.unique_id = user_scores.user_id
+ LEFT JOIN post_tags ON posts.unique_id = post_tags.post_id
+ LEFT JOIN tags ON post_tags.tage_id = tags.unique_id `;
+ let condition = ``;
+ let order_by = ` ORDER BY posts.create_at DESC`;
+
+ let setParams = [];
+
+ if(user_id) {
+  condition = `WHERE posts.user_id = ? `;
+  setParams.push(user_id);
+} 
+
+if(params.main_category_id) {
+
+  if(!condition) {
+    condition = `WHERE posts.main_category_id = ?`;
+  } else {
+    condition = condition + ` AND posts.main_category_id = ?`;
+  }
+
+  setParams.push(params.main_category_id);
+} 
+
+if(params.sub_category_id) {
+
+  if(!condition) {
+    condition = `WHERE posts.sub_category_id = ?`;
+  } else {
+    condition = condition + ` AND posts.sub_category_id = ?`;
+  }
+
+  setParams.push(params.sub_category_id);
+} 
+
+if(params.search_keyword) {
+
+  if(!condition) {
+    condition = `WHERE posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
+  } else {
+    condition = condition + ` AND posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
+  }
+
+  setParams.push(params.search_keyword);
+
+} 
+
+if(params.filter) {
+  if(params.filter == 1) { // 추천순
+    order_by = ` ORDER BY recommend_cnt DESC`;
+  }
+
+  if(params.filter == 2) { // 댓글순
+    order_by = ` ORDER BY comment_cnt DESC`;
+  }
+
+  if(params.filter == 3) { // 스크랩순
+    order_by = ` ORDER BY scraps_cnt DESC`;
+  }
+
+  if(params.filter == 4) { // 조회수순
+    order_by = ` ORDER BY posts.views DESC`;
+  }
+} 
+
+query = query + condition + order_by;
+
+return await myDataSource.query(query, setParams);
+
+}
+
 // 게시글 목록 읽기
-const selectPostList = async (params, user_id) => {
-  let query = `SELECT 
+const selectPostList = async (params, user_id, corsur) => {
+  let with_select = `
+  WITH pages AS (
+    SELECT
+    row_number() OVER(ORDER BY posts.unique_id) AS num,
+    posts.unique_id AS post_id
+    FROM posts
+    LEFT JOIN users ON posts.user_id = users.unique_id
+    LEFT JOIN sub_category ON posts.sub_category_id = sub_category.unique_id
+    LEFT JOIN user_scores ON users.unique_id = user_scores.user_id
+    LEFT JOIN post_tags ON posts.unique_id = post_tags.post_id
+    LEFT JOIN tags ON post_tags.tage_id = tags.unique_id `;
+  let with_condition = ``;
+  let with_group_by = `  GROUP BY posts.unique_id`;
+  let with_order_by = `  ORDER BY posts.create_at DESC )`;
+  let select_query = `
+  SELECT 
+  pages.num,
   posts.unique_id,
   users.unique_id as user_id,
   users.nickname,
@@ -110,14 +205,16 @@ const selectPostList = async (params, user_id) => {
     )
     ) AS tags
   FROM posts
+  LEFT JOIN pages ON pages.post_id = posts.unique_id
   LEFT JOIN users ON posts.user_id = users.unique_id
   LEFT JOIN sub_category ON posts.sub_category_id = sub_category.unique_id
   LEFT JOIN user_scores ON users.unique_id = user_scores.user_id
   LEFT JOIN post_tags ON posts.unique_id = post_tags.post_id
   LEFT JOIN tags ON post_tags.tage_id = tags.unique_id `;
   let condition = ``;
-  let group_by = `GROUP BY posts.unique_id `;
-  let order_by = `ORDER BY posts.create_at DESC`;
+  let group_by = ` GROUP BY posts.unique_id `;
+  let order_by = ` ORDER BY posts.create_at DESC`;
+  let limit = ` LIMIT `+params.limit;
 
   // main_category_id, sub_category_id, search_keyword, filter, page, limit
 
@@ -125,6 +222,7 @@ const selectPostList = async (params, user_id) => {
 
   if(user_id) {
     condition = `WHERE posts.user_id = ? `;
+    with_condition = `WHERE posts.user_id = ` + user_id ;
     setParams.push(user_id);
   } 
 
@@ -134,6 +232,12 @@ const selectPostList = async (params, user_id) => {
       condition = `WHERE posts.main_category_id = ?`;
     } else {
       condition = condition + ` AND posts.main_category_id = ?`;
+    }
+
+    if(!with_condition) {
+      with_condition = `WHERE posts.main_category_id = ` + params.main_category_id + ` `;
+    } else {
+      with_condition =  with_condition + ` AND posts.main_category_id = ` + params.main_category_id + ` `;
     }
 
     setParams.push(params.main_category_id);
@@ -147,6 +251,12 @@ const selectPostList = async (params, user_id) => {
       condition = condition + ` AND posts.sub_category_id = ?`;
     }
 
+    if(!with_condition) {
+      with_condition = `WHERE posts.sub_category_id = ` + params.sub_category_id + ` `; 
+    } else {
+      with_condition = with_condition + ` AND posts.sub_category_id = ` + params.sub_category_id + ` `;
+    }
+
     setParams.push(params.sub_category_id);
   } 
 
@@ -158,34 +268,54 @@ const selectPostList = async (params, user_id) => {
       condition = condition + ` AND posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
     }
 
+    if(!with_condition) {
+      with_condition = `WHERE posts.title LIKE CONCAT('%',` + params.search_keyword + `,'%') `;
+    } else {
+      with_condition = with_condition + ` AND posts.title LIKE CONCAT('%',` + params.search_keyword + `,'%') `;
+    }
+
     setParams.push(params.search_keyword);
 
   } 
 
   if(params.filter) {
     if(params.filter == 1) { // 추천순
-      order_by = `ORDER BY recommend_cnt DESC`;
+      order_by = ` ORDER BY recommend_cnt DESC`;
+      with_order_by = ` ORDER BY recommend_cnt DESC)`;
     }
 
     if(params.filter == 2) { // 댓글순
-      order_by = `ORDER BY comment_cnt DESC`;
+      order_by = ` ORDER BY comment_cnt DESC`;
+      with_order_by = ` ORDER BY comment_cnt DESC)`;
     }
 
     if(params.filter == 3) { // 스크랩순
-      order_by = `ORDER BY scraps_cnt DESC`;
+      order_by = ` ORDER BY scraps_cnt DESC`;
+      with_order_by = ` ORDER BY scraps_cnt DESC)`;
     }
 
     if(params.filter == 4) { // 조회수순
-      order_by = `ORDER BY posts.views DESC`;
+      order_by = ` ORDER BY posts.views DESC`;
+      with_order_by = ` ORDER BY posts.views DESC)`;
     }
-  } 
-
-  query = query + condition + group_by + order_by;
+  }
   
+  if(corsur) {
+    if(!condition) {
+      condition = `WHERE pages.num < ?`;
+    } else {
+      condition = condition + ` AND pages.num < ?`;
+    }
+
+    setParams.push(corsur);
+  }
+
+  let query = with_select + with_condition + with_group_by + with_order_by + select_query + condition + group_by + order_by + limit;
+
   return await myDataSource.query(query, setParams);
 }
 
-const selectJobsPostList = async (params) => {
+const selectJobsPostList = async (params, corsur) => {
   let query = `SELECT 
   posts.unique_id,
   posts.create_at,
@@ -242,4 +372,13 @@ const postViewsCount = async (post_id) => {
   await myDataSource.query(`UPDATE posts SET views = views + 1 WHERE unique_id = ?`, [post_id]);
 }
 
-module.exports = { insertPost, insertJobsPost, selectPostOne, updatePost, updateJobsPost, deletePost, selectPostList, postViewsCount, selectJobsPostList }
+module.exports = { insertPost, 
+  insertJobsPost, 
+  selectPostOne, 
+  updatePost, 
+  updateJobsPost, 
+  deletePost, 
+  selectPostList, 
+  postViewsCount, 
+  selectJobsPostList,
+  getPostCount }
