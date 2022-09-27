@@ -9,8 +9,8 @@ const getPostComment = async (post_id)=>{
         , u.profile_image 
         , co.unique_id AS comment_id
         , co.content 
-        , co.create_at AS comment_create_at
-        , co.update_at AS comment_update_at
+        , DATE_FORMAT(co.create_at, '%Y-%m-%d') AS comment_create_at
+        , DATE_FORMAT(co.update_at, '%Y-%m-%d') AS comment_update_at
         , us.score 
         , concat(
             '[',
@@ -24,8 +24,8 @@ const getPostComment = async (post_id)=>{
                         'user_score', us2.score ,
                         'comment_id' , co2.unique_id,
                         'content', co2.content, 
-                        'comment_create_at'	, co2.create_at,
-                        'comment_update_at'	, co2.update_at
+                        'comment_create_at'	, DATE_FORMAT(co2.create_at, '%Y-%m-%d'),
+                        'comment_update_at'	, DATE_FORMAT(co2.update_at, '%Y-%m-%d')
                         )ORDER BY co2.create_at),
                     ']'
             ) as comment_in_comment

@@ -11,13 +11,17 @@ const insertPost = async (req, res) => {
   let err = validatorValues(params, postDto.getPostHaskey());
 
   if(err) {
-        return res.status(400).json({ message: err });
+    return res.status(400).json({ message: err });
   }
 
   try {  
-    await postService.insertPost(params, unique_id);
+    const data = await postService.insertPost(params, unique_id);
 
-    return res.status(201).json({ message: 'post create success' });
+    if(data.err_msg) {
+      return res.status(400).json({ message: data.err_msg }); 
+    }
+
+    return res.status(201).json({ post_id: data.post_id, message: 'post create success' });
   } catch (err) {
     res.status(err.status || 500).json(err.message);
   }
@@ -83,10 +87,10 @@ const deletePost = async (req, res) => {
 // 게시글 목록 읽기
 const selectPostList = async (req, res) => {
   const { authorization } = req.headers;
-  const { main_category_id, sub_category_id, search_keyword, filter, page, limit} = req.query
+  const { main_category_id, sub_category_id, search_keyword, filter, page, limit, filter_keyword} = req.query
 
   try{
-    const params = {authorization, main_category_id, sub_category_id, search_keyword, filter, page, limit};
+    const params = {authorization, main_category_id, sub_category_id, search_keyword, filter, page, limit, filter_keyword };
     const posts = await postService.selectPostList(params);
 
     return res.status(200).json( { posts } );
