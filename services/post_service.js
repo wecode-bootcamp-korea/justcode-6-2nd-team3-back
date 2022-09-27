@@ -13,7 +13,6 @@ const insertPost = async (params, user_id) => {
   const sub_category_name = await menuDao.selectSubCategoryName(params.sub_category_id);
   let post_id = '';
   if(sub_category_name[0].sub_category_name === '구인'){   // 구인 게시판 게시글 입력
-    // 협의 or 급여 설정 값 어떻게 넘겨줄지 논의 필요.
 
     await postDao.insertJobsPost(params, user_id);
   } else {  // 일반 게시판 게시글 입력
@@ -80,15 +79,9 @@ const deletePost = async (post_id, user_id) => {
 // 게시글 목록 읽기
 const selectPostList = async params => {
 
-  const page_count = await postDao.getPostCount(params);
-  
   let corsur = '';
-  if(params.page) {
-    if(params.page != 1) {
-      corsur = page_count[0].post_count - ((params.page-1) * params.limit) + 1;
-    } 
-  }
-
+  let page_count = '';
+  
   let user_id = "";
   if(params.authorization ) {
     user_id = jwt.verify(params.authorization, 'server_made_secret_key').userId;
@@ -101,12 +94,36 @@ const selectPostList = async params => {
   
   let posts = '';
 
-  if(sub_category_name[0].sub_category_name === '구인'){   // 구인 게시판 게시글 목록 조회 수정 중
+  if(sub_category_name[0].sub_category_name === '구인'){   
+    page_count = await postDao.getJobsPostCount(params);
+    
+    if(params.page) {
+      if(params.page != 1) {
+        corsur = page_count[0].post_count - ((params.page-1) * params.limit) + 1;
+      } 
+    }
+
     posts = await postDao.selectJobsPostList(params, corsur);
+
+    for(let i = 0; i<posts.length; i++){
+      posts[i].Business_registration_image = "http://localhost:8000/file"+ posts[i].Business_registration_image;
+    }
   } else {
+    page_count = await postDao.getPostCount(params);
+
+    if(params.page) {
+      if(params.page != 1) {
+        corsur = page_count[0].post_count - ((params.page-1) * params.limit) + 1;
+      } 
+    }
+    
     posts = await postDao.selectPostList(params, user_id, corsur);
+
+    for(let i = 0; i<posts.length; i++){
+      posts[i].profile_image = "http://localhost:8000/file"+ posts[i].profile_image;
+    }
   }
-  return posts;
+  return {posts, page_count};
 }
 
 module.exports = { insertPost, selectPostOne, updatePost, deletePost, selectPostList }
