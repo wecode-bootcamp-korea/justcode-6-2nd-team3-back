@@ -31,6 +31,8 @@ const selectPostOne = async (post_id) => {
     users.nickname,
     users.profile_image,
     user_scores.score,
+    companies.company_name,
+    companies.Business_registration_image,
     DATE_FORMAT(posts.create_at, '%Y-%m-%d') AS create_at,
     posts.title,
     posts.content,
@@ -49,6 +51,7 @@ const selectPostOne = async (post_id) => {
     ) AS tags
     FROM posts
     LEFT JOIN users ON posts.user_id = users.unique_id
+    LEFT JOIN companies ON users.unique_id = companies.user_id
     LEFT JOIN user_scores ON users.unique_id = user_scores.user_id
     LEFT JOIN post_tags ON posts.unique_id = post_tags.post_id
     LEFT JOIN tags ON post_tags.tage_id = tags.unique_id
@@ -170,7 +173,13 @@ const selectPostList = async (params, user_id, corsur) => {
   WITH pages AS (
     SELECT
     row_number() OVER(ORDER BY posts.unique_id) AS num,
-    posts.unique_id AS post_id
+    posts.unique_id AS post_id,
+    JSON_ARRAYAGG(
+      JSON_OBJECT(
+      'tag_id', tags.unique_id,
+      'tag_name', tags.tag_name
+      )
+    ) as tags
     FROM posts
     LEFT JOIN users ON posts.user_id = users.unique_id
     LEFT JOIN sub_category ON posts.sub_category_id = sub_category.unique_id
@@ -198,12 +207,7 @@ const selectPostList = async (params, user_id, corsur) => {
   (SELECT COUNT(*) FROM comments WHERE post_id = posts.unique_id) AS comment_cnt,
   (SELECT COUNT(*) FROM post_recommend WHERE post_id = posts.unique_id) AS recommend_cnt,
   posts.views,
-  JSON_ARRAYAGG(
-      JSON_OBJECT(
-      'tag_id', tags.unique_id,
-      'tag_name', tags.tag_name
-    )
-    ) AS tags
+  pages.tags
   FROM posts
   LEFT JOIN pages ON pages.post_id = posts.unique_id
   LEFT JOIN users ON posts.user_id = users.unique_id
@@ -215,8 +219,6 @@ const selectPostList = async (params, user_id, corsur) => {
   let group_by = ` GROUP BY posts.unique_id `;
   let order_by = ` ORDER BY posts.create_at DESC`;
   let limit = ` LIMIT `+params.limit;
-
-  // main_category_id, sub_category_id, search_keyword, filter, page, limit
 
   let setParams = [];
 
@@ -315,8 +317,94 @@ const selectPostList = async (params, user_id, corsur) => {
   return await myDataSource.query(query, setParams);
 }
 
+// 구인게시글 목록 갯수 가지고오기
+const getJobsPostCount = async (params, user_id) => {
+  let query = `
+  SELECT
+  COUNT(DISTINCT( posts.unique_id)) AS post_count
+  FROM posts
+  LEFT JOIN users ON posts.user_id = users.unique_id
+  LEFT JOIN companies ON users.unique_id = companies.user_id
+  LEFT JOIN sub_category ON posts.sub_category_id = sub_category.unique_id
+  LEFT JOIN user_scores ON users.unique_id = user_scores.user_id
+  LEFT JOIN post_tags ON posts.unique_id = post_tags.post_id
+  LEFT JOIN tags ON post_tags.tage_id = tags.unique_id `;
+  let condition = ``;
+  let order_by = ` ORDER BY posts.create_at DESC`;
+ 
+  let setParams = [];
+ 
+  if(user_id) {
+   condition = `WHERE posts.user_id = ? `;
+   setParams.push(user_id);
+ } 
+ 
+ if(params.main_category_id) {
+ 
+   if(!condition) {
+     condition = `WHERE posts.main_category_id = ?`;
+   } else {
+     condition = condition + ` AND posts.main_category_id = ?`;
+   }
+ 
+   setParams.push(params.main_category_id);
+ } 
+ 
+ if(params.sub_category_id) {
+ 
+   if(!condition) {
+     condition = `WHERE posts.sub_category_id = ?`;
+   } else {
+     condition = condition + ` AND posts.sub_category_id = ?`;
+   }
+ 
+   setParams.push(params.sub_category_id);
+ } 
+ 
+ if(params.search_keyword) {
+ 
+   if(!condition) {
+     condition = `WHERE posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
+   } else {
+     condition = condition + ` AND posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
+   }
+ 
+   setParams.push(params.search_keyword);
+ 
+ } 
+ 
+ query = query + condition + order_by;
+ 
+ return await myDataSource.query(query, setParams);
+ 
+ }
+
+ // 구인 게시글 목록 읽기
 const selectJobsPostList = async (params, corsur) => {
-  let query = `SELECT 
+  let with_select = `
+  WITH pages AS (
+    SELECT
+    row_number() OVER(ORDER BY posts.unique_id) AS num,
+    posts.unique_id AS post_id,
+    JSON_ARRAYAGG(
+      JSON_OBJECT(
+      'tag_id', tags.unique_id,
+      'tag_name', tags.tag_name
+      )
+    ) AS tags
+    FROM posts
+    LEFT JOIN users ON posts.user_id = users.unique_id
+    LEFT JOIN companies ON users.unique_id = companies.user_id
+    LEFT JOIN sub_category ON posts.sub_category_id = sub_category.unique_id
+    LEFT JOIN user_scores ON users.unique_id = user_scores.user_id
+    LEFT JOIN post_tags ON posts.unique_id = post_tags.post_id
+    LEFT JOIN tags ON post_tags.tage_id = tags.unique_id `;
+  let with_condition = ``;
+  let with_group_by = `  GROUP BY posts.unique_id`;
+  let with_order_by = `  ORDER BY posts.create_at DESC )`;
+  let select_query = `
+  SELECT 
+  pages.num,
   posts.unique_id,
   posts.create_at,
   posts.title,
@@ -334,37 +422,87 @@ const selectJobsPostList = async (params, corsur) => {
   (SELECT COUNT(*) FROM scraps WHERE post_id = posts.unique_id) AS scraps_cnt,
   (SELECT COUNT(*) FROM comments WHERE post_id = posts.unique_id) AS comment_cnt,
   (SELECT COUNT(*) FROM post_recommend WHERE post_id = posts.unique_id) AS recommend_cnt,
-  JSON_ARRAYAGG(
-      JSON_OBJECT(
-      'tag_id', tags.unique_id,
-      'tag_name', tags.tag_name
-    )
-    ) AS tags
+  posts.views,
+  pages.tags
   FROM posts
+  LEFT JOIN pages ON pages.post_id = posts.unique_id
   LEFT JOIN users ON posts.user_id = users.unique_id
   LEFT JOIN companies ON users.unique_id = companies.user_id
   LEFT JOIN sub_category ON posts.sub_category_id = sub_category.unique_id
   LEFT JOIN user_scores ON users.unique_id = user_scores.user_id
   LEFT JOIN post_tags ON posts.unique_id = post_tags.post_id
-  LEFT JOIN tags ON post_tags.tage_id = tags.unique_id
-  WHERE posts.main_category_id = ?
-  AND posts.sub_category_id = ? `;
+  LEFT JOIN tags ON post_tags.tage_id = tags.unique_id `;
   let condition = ``;
-  let group_by = `GROUP BY posts.unique_id `;
-  let order_by = `ORDER BY posts.create_at DESC`;
+  let group_by = ` GROUP BY posts.unique_id `;
+  let order_by = ` ORDER BY posts.create_at DESC`;
+  let limit = ` LIMIT `+params.limit;
 
   let setParams = [];
-  setParams.push(params.main_category_id);
-  setParams.push(params.sub_category_id);
+
+  if(params.main_category_id) {
+
+    if(!condition) {
+      condition = `WHERE posts.main_category_id = ?`;
+    } else {
+      condition = condition + ` AND posts.main_category_id = ?`;
+    }
+
+    if(!with_condition) {
+      with_condition = `WHERE posts.main_category_id = ` + params.main_category_id + ` `;
+    } else {
+      with_condition =  with_condition + ` AND posts.main_category_id = ` + params.main_category_id + ` `;
+    }
+
+    setParams.push(params.main_category_id);
+  } 
+
+  if(params.sub_category_id) {
+
+    if(!condition) {
+      condition = `WHERE posts.sub_category_id = ?`;
+    } else {
+      condition = condition + ` AND posts.sub_category_id = ?`;
+    }
+
+    if(!with_condition) {
+      with_condition = `WHERE posts.sub_category_id = ` + params.sub_category_id + ` `; 
+    } else {
+      with_condition = with_condition + ` AND posts.sub_category_id = ` + params.sub_category_id + ` `;
+    }
+
+    setParams.push(params.sub_category_id);
+  } 
 
   if(params.search_keyword) {
-    condition = `AND posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
+
+    if(!condition) {
+      condition = `WHERE posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
+    } else {
+      condition = condition + ` AND posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
+    }
+
+    if(!with_condition) {
+      with_condition = `WHERE posts.title LIKE CONCAT('%',` + params.search_keyword + `,'%') `;
+    } else {
+      with_condition = with_condition + ` AND posts.title LIKE CONCAT('%',` + params.search_keyword + `,'%') `;
+    }
 
     setParams.push(params.search_keyword);
 
   } 
-  query = query + condition + group_by + order_by;
-  
+
+  if(corsur) {
+    if(!condition) {
+      condition = `WHERE pages.num < ?`;
+    } else {
+      condition = condition + ` AND pages.num < ?`;
+    }
+
+    setParams.push(corsur);
+  }
+
+  let query = with_select + with_condition + with_group_by + with_order_by + select_query + condition + group_by + order_by + limit;
+
   return await myDataSource.query(query, setParams);
 }
 
@@ -381,4 +519,5 @@ module.exports = { insertPost,
   selectPostList, 
   postViewsCount, 
   selectJobsPostList,
-  getPostCount }
+  getPostCount,
+  getJobsPostCount }

@@ -26,10 +26,19 @@ const insertPost = async (req, res) => {
 // 게시글 세부페이지 읽기
 const selectPostOne = async (req, res) => {
   const { post_id } = req.params;
+
+  if(isNaN(post_id)) {
+    return res.status(400).json({ message: '잘못된 게시글 번호입니다.' });
+  }
+
   try {
     const post = await postService.selectPostOne(post_id);
 
-    return res.status(200).json({ post });
+    if(post[0].unique_id === null) {
+      return res.status(400).json({ message: '게시글이 존재하지 않습니다' });
+    } else {
+      return res.status(200).json({ post });
+    }
   } catch (err) {
     res.status(err.status || 500).json(err.message);
   }
