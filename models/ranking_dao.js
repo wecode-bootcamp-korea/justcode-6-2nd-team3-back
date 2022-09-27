@@ -38,7 +38,7 @@ const getEditorChoice = async ()=>{
         , ANY_VALUE(us.score) AS score
         , DATE_FORMAT(ANY_VALUE(p.create_at), '%Y-%m-%d') AS create_at 
         , ANY_VALUE(sub.sub_category_name) AS sub_category_name
-        , ANY_VALUE(sub.sub_category_name_en) AS sub_category_name_en
+        , ANY_VALUE(sub.path) AS path
         , (SELECT COUNT(*) FROM scraps WHERE post_id = p.unique_id) AS scraps_cnt
         , (SELECT COUNT(*) FROM comments WHERE post_id = p.unique_id) AS comment_cnt
         ,  (SELECT COUNT(*) 
@@ -82,7 +82,7 @@ const getWeeklyBest = async ()=>{
         , ANY_VALUE(us.score) AS score
         , DATE_FORMAT(ANY_VALUE(p.create_at), '%Y-%m-%d') AS create_at 
         , ANY_VALUE(sub.sub_category_name) AS sub_category_name
-        , ANY_VALUE(sub.sub_category_name_en) AS sub_category_name_en
+        , ANY_VALUE(sub.path) AS path
         , (SELECT COUNT(*) FROM scraps WHERE post_id = p.unique_id) AS scraps_cnt
         , (SELECT COUNT(*) FROM comments WHERE post_id = p.unique_id) AS comment_cnt
         ,  (SELECT COUNT(*) 
