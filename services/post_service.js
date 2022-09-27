@@ -4,18 +4,31 @@ const postDao = require('../models/post_dao');
 const postTagsDao = require('../models/post_tags_dao');
 const menuDao = require('../models/menu_dao');
 const scoreDao = require('../models/user_scores_dao');
+const userDao = require('../models/user_dao');
 const userProfileDao = require("../models/user_profile_dao");
-const { Cursor } = require('typeorm');
+
 
 // 게시글 작성
 const insertPost = async (params, user_id) => { 
+  
+  let user_type = await userDao.getme(user_id);
 
   const sub_category_name = await menuDao.selectSubCategoryName(params.sub_category_id);
   let post_id = '';
-  if(sub_category_name[0].sub_category_name === '구인'){   // 구인 게시판 게시글 입력
+  let err_msg = '';
+  if(sub_category_name[0].sub_category_name === '구인' && user_type[0].user_type == 2){   // 구인 게시판 게시글 입력
+    post_id = await postDao.insertJobsPost(params, user_id);
+  } else if (sub_category_name[0].sub_category_name === '구인' && user_type[0].user_type != 2){
+    err_msg = '기업회원만 작성 가능합니다.'
+  }
 
-    await postDao.insertJobsPost(params, user_id);
-  } else {  // 일반 게시판 게시글 입력
+  if(sub_category_name[0].sub_category_name === '공지사항' && user_type[0].user_type == 3) {
+    post_id = await postDao.insertPost(params, user_id);
+  } else if (sub_category_name[0].sub_category_name === '공지사항' && user_type[0].user_type != 3){
+    err_msg = '관리자만 작성 가능합니다.'
+  }
+
+  if(sub_category_name[0].sub_category_name !== '공지사항' || sub_category_name[0].sub_category_name !== '구인') {
     post_id = await postDao.insertPost(params, user_id);
   }
 
@@ -33,12 +46,19 @@ const insertPost = async (params, user_id) => {
    }
 
   await scoreDao.addUserScore(user_id);
+
+  return {post_id, err_msg};
 }
 
 // 게시글 세부페이지 읽기
 const selectPostOne = async (post_id) => {
   postDao.postViewsCount(post_id);
   const post = await postDao.selectPostOne(post_id);
+
+  for(let i = 0; i<post.length; i++){
+    post[i].profile_image = "http://localhost:8000/file"+ post[i].profile_image;
+    post[i].Business_registration_image = "http://localhost:8000/file"+ post[i].Business_registration_image;
+  }
 
   return post;
 }
@@ -95,6 +115,7 @@ const selectPostList = async params => {
   let posts = '';
 
   if(sub_category_name[0].sub_category_name === '구인'){   
+    console.log('구인 ~~~ ');
     page_count = await postDao.getJobsPostCount(params);
     
     if(params.page) {
@@ -104,11 +125,8 @@ const selectPostList = async params => {
     }
 
     posts = await postDao.selectJobsPostList(params, corsur);
-
-    for(let i = 0; i<posts.length; i++){
-      posts[i].Business_registration_image = "http://localhost:8000/file"+ posts[i].Business_registration_image;
-    }
   } else {
+    console.log('QNA~~~ ');
     page_count = await postDao.getPostCount(params);
 
     if(params.page) {
@@ -118,11 +136,13 @@ const selectPostList = async params => {
     }
     
     posts = await postDao.selectPostList(params, user_id, corsur);
-
-    for(let i = 0; i<posts.length; i++){
-      posts[i].profile_image = "http://localhost:8000/file"+ posts[i].profile_image;
-    }
   }
+
+  for(let i = 0; i<posts.length; i++){
+    posts[i].profile_image = "http://localhost:8000/file"+ posts[i].profile_image;
+    posts[i].Business_registration_image = "http://localhost:8000/file"+ posts[i].Business_registration_image;
+  }
+
   return {posts, page_count};
 }
 

@@ -12,7 +12,7 @@ const insertPost = async (params, user_id) => {
 
 // 구인 게시글 작성
 const insertJobsPost = async (params, user_id) => {
-  await myDataSource.query(
+  const post_id = await myDataSource.query(
     `INSERT INTO posts(main_category_id, sub_category_id, user_id, 
      position, career, region, contract_type, pay, manager_name, 
      manager_tel, manager_email, title, content) 
@@ -21,6 +21,8 @@ const insertJobsPost = async (params, user_id) => {
      params.position, params.career, params.region, params.contract_type, params.pay,
      params.manager_name, params.manager_tel, params.manager_email, params.title, params.content]
   )
+
+  return post_id.insertId;
 }
 
 // 게시글 세부페이지 읽기
@@ -31,8 +33,11 @@ const selectPostOne = async (post_id) => {
     users.nickname,
     users.profile_image,
     user_scores.score,
+    posts.sub_category_id,
+    sub_category.sub_category_name,
     companies.company_name,
     companies.Business_registration_image,
+    companies.introduction,
     DATE_FORMAT(posts.create_at, '%Y-%m-%d') AS create_at,
     posts.title,
     posts.content,
@@ -42,6 +47,8 @@ const selectPostOne = async (post_id) => {
     posts.contract_type, 
     posts.pay, 
     posts.manager_name, 
+    posts.manager_tel,
+    posts.manager_email,
     posts.views,
     JSON_ARRAYAGG(
        JSON_OBJECT(
@@ -50,6 +57,7 @@ const selectPostOne = async (post_id) => {
        )
     ) AS tags
     FROM posts
+    LEFT JOIN sub_category ON posts.sub_category_id = sub_category.unique_id
     LEFT JOIN users ON posts.user_id = users.unique_id
     LEFT JOIN companies ON users.unique_id = companies.user_id
     LEFT JOIN user_scores ON users.unique_id = user_scores.user_id
@@ -271,9 +279,9 @@ const selectPostList = async (params, user_id, corsur) => {
     }
 
     if(!with_condition) {
-      with_condition = `WHERE posts.title LIKE CONCAT('%',` + params.search_keyword + `,'%') `;
+      with_condition = `WHERE posts.title LIKE CONCAT('%','` + params.search_keyword + `','%') `;
     } else {
-      with_condition = with_condition + ` AND posts.title LIKE CONCAT('%',` + params.search_keyword + `,'%') `;
+      with_condition = with_condition + ` AND posts.title LIKE CONCAT('%','` + params.search_keyword + `','%') `;
     }
 
     setParams.push(params.search_keyword);
@@ -371,8 +379,44 @@ const getJobsPostCount = async (params, user_id) => {
  
    setParams.push(params.search_keyword);
  
- } 
+ }
  
+ if(params.filter) {
+  if(!condition) {
+    switch(params.filter) {
+      case 'position' :
+        condition = `WHERE posts.position LIKE CONCAT('%',` + `?` + `,'%')`;
+        break;
+      case 'career' :
+        condition = `WHERE posts.career LIKE CONCAT('%',` + `?` + `,'%')`;
+        break;
+      case 'region' :
+        condition = `WHERE posts.region LIKE CONCAT('%',` + `?` + `,'%')`;
+        break;
+      case 'contract_type' :
+        condition = `WHERE posts.contract_type LIKE CONCAT('%',` + `?` + `,'%')`;
+        break;
+    }
+  } else {
+    switch(params.filter) {
+      case 'position' :
+        condition = condition + ` AND posts.position LIKE CONCAT('%',` + `?` + `,'%')`;
+        break;
+      case 'career' :
+        condition = condition + ` AND posts.career LIKE CONCAT('%',` + `?` + `,'%')`;
+        break;
+      case 'region' :
+        condition = condition + ` AND posts.region LIKE CONCAT('%',` + `?` + `,'%')`;
+        break;
+      case 'contract_type' :
+        condition = condition + ` AND posts.contract_type LIKE CONCAT('%',` + `?` + `,'%')`;
+        break;
+    }
+  }
+
+  setParams.push(params.filter_keyword);
+ }
+
  query = query + condition + order_by;
  
  return await myDataSource.query(query, setParams);
@@ -482,14 +526,82 @@ const selectJobsPostList = async (params, corsur) => {
     }
 
     if(!with_condition) {
-      with_condition = `WHERE posts.title LIKE CONCAT('%',` + params.search_keyword + `,'%') `;
+      with_condition = `WHERE posts.title LIKE CONCAT('%','` + params.search_keyword + `','%') `;
     } else {
-      with_condition = with_condition + ` AND posts.title LIKE CONCAT('%',` + params.search_keyword + `,'%') `;
+      with_condition = with_condition + ` AND posts.title LIKE CONCAT('%','` + params.search_keyword + `','%') `;
     }
 
     setParams.push(params.search_keyword);
 
   } 
+
+  if(params.filter) {
+    if(!condition) {
+      switch(params.filter) {
+        case 'position' :
+          condition = `WHERE posts.position LIKE CONCAT('%',` + `?` + `,'%')`;
+          break;
+        case 'career' :
+          condition = `WHERE posts.career LIKE CONCAT('%',` + `?` + `,'%')`;
+          break;
+        case 'region' :
+          condition = `WHERE posts.region LIKE CONCAT('%',` + `?` + `,'%')`;
+          break;
+        case 'contract_type' :
+          condition = `WHERE posts.contract_type LIKE CONCAT('%',` + `?` + `,'%')`;
+          break;
+      }
+    } else {
+      switch(params.filter) {
+        case 'position' :
+          condition = condition + ` AND posts.position LIKE CONCAT('%',` + `?` + `,'%')`;
+          break;
+        case 'career' :
+          condition = condition + ` AND posts.career LIKE CONCAT('%',` + `?` + `,'%')`;
+          break;
+        case 'region' :
+          condition = condition + ` AND posts.region LIKE CONCAT('%',` + `?` + `,'%')`;
+          break;
+        case 'contract_type' :
+          condition = condition + ` AND posts.contract_type LIKE CONCAT('%',` + `?` + `,'%')`;
+          break;
+      }
+    }
+
+    if(!with_condition) {
+      switch(params.filter) {
+        case 'position' :
+          with_condition = `WHERE posts.position LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
+          break;
+        case 'career' :
+          with_condition = `WHERE posts.career LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
+          break;
+        case 'region' :
+          with_condition = `WHERE posts.region LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
+          break;
+        case 'contract_type' :
+          with_condition = `WHERE posts.contract_type LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
+          break;
+      }
+    } else {
+      switch(params.filter) {
+        case 'position' :
+          with_condition = with_condition + ` AND posts.position LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
+          break;
+        case 'career' :
+          with_condition = with_condition + ` AND posts.career LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
+          break;
+        case 'region' :
+          with_condition = with_condition + ` AND posts.region LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
+          break;
+        case 'contract_type' :
+          with_condition = with_condition + ` AND posts.contract_type LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
+          break;
+      }
+    }
+  
+    setParams.push(params.filter_keyword);
+   }
 
   if(corsur) {
     if(!condition) {
