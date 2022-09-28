@@ -108,7 +108,6 @@ const getPostCount = async (params, user_id) => {
  LEFT JOIN post_tags ON posts.unique_id = post_tags.post_id
  LEFT JOIN tags ON post_tags.tage_id = tags.unique_id `;
  let condition = ``;
- let order_by = ` ORDER BY posts.create_at DESC`;
 
  let setParams = [];
 
@@ -151,25 +150,7 @@ if(params.search_keyword) {
 
 } 
 
-if(params.filter) {
-  if(params.filter == 1) { // 추천순
-    order_by = ` ORDER BY recommend_cnt DESC`;
-  }
-
-  if(params.filter == 2) { // 댓글순
-    order_by = ` ORDER BY comment_cnt DESC`;
-  }
-
-  if(params.filter == 3) { // 스크랩순
-    order_by = ` ORDER BY scraps_cnt DESC`;
-  }
-
-  if(params.filter == 4) { // 조회수순
-    order_by = ` ORDER BY posts.views DESC`;
-  }
-} 
-
-query = query + condition + order_by;
+query = query + condition;
 
 return await myDataSource.query(query, setParams);
 
@@ -187,7 +168,10 @@ const selectPostList = async (params, user_id, corsur) => {
       'tag_id', tags.unique_id,
       'tag_name', tags.tag_name
       )
-    ) as tags
+    ) as tags,
+    (SELECT COUNT(*) FROM scraps WHERE post_id = posts.unique_id) AS scraps_cnt,
+    (SELECT COUNT(*) FROM comments WHERE post_id = posts.unique_id) AS comment_cnt,
+    (SELECT COUNT(*) FROM post_recommend WHERE post_id = posts.unique_id) AS recommend_cnt
     FROM posts
     LEFT JOIN users ON posts.user_id = users.unique_id
     LEFT JOIN sub_category ON posts.sub_category_id = sub_category.unique_id
@@ -338,7 +322,6 @@ const getJobsPostCount = async (params, user_id) => {
   LEFT JOIN post_tags ON posts.unique_id = post_tags.post_id
   LEFT JOIN tags ON post_tags.tage_id = tags.unique_id `;
   let condition = ``;
-  let order_by = ` ORDER BY posts.create_at DESC`;
  
   let setParams = [];
  
@@ -417,7 +400,7 @@ const getJobsPostCount = async (params, user_id) => {
   setParams.push(params.filter_keyword);
  }
 
- query = query + condition + order_by;
+ query = query + condition;
  
  return await myDataSource.query(query, setParams);
  
@@ -462,10 +445,7 @@ const selectJobsPostList = async (params, corsur) => {
   posts.career,
   sub_category.unique_id as sub_category_id,
   sub_category.sub_category_name,
-  sub_category.path,
-  (SELECT COUNT(*) FROM scraps WHERE post_id = posts.unique_id) AS scraps_cnt,
-  (SELECT COUNT(*) FROM comments WHERE post_id = posts.unique_id) AS comment_cnt,
-  (SELECT COUNT(*) FROM post_recommend WHERE post_id = posts.unique_id) AS recommend_cnt,
+  sub_category.path
   posts.views,
   pages.tags
   FROM posts
@@ -622,6 +602,17 @@ const postViewsCount = async (post_id) => {
   await myDataSource.query(`UPDATE posts SET views = views + 1 WHERE unique_id = ?`, [post_id]);
 }
 
+const getEvnetPostList = async () => {
+  return await myDataSource.query(`SELECT posts.title, DATE_FORMAT(posts.create_at, '%Y-%m-%d') AS create_at, users.nickname
+  FROM posts
+  LEFT JOIN users ON posts.user_id = users.unique_id
+  LEFT JOIN main_category ON posts.main_category_id = main_category.unique_id
+  WHERE main_category.main_category_name = 'EVENTS'
+  AND users.user_type = 3
+  ORDER BY create_at
+  LIMIT 3`);
+}
+
 module.exports = { insertPost, 
   insertJobsPost, 
   selectPostOne, 
@@ -632,4 +623,5 @@ module.exports = { insertPost,
   postViewsCount, 
   selectJobsPostList,
   getPostCount,
-  getJobsPostCount }
+  getJobsPostCount,
+  getEvnetPostList }

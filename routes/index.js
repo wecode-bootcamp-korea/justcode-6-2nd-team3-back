@@ -7,7 +7,8 @@ const commentRouter = require("./comment_router");
 const rankingRouter = require("./ranking_router");
 const tagController = require("../controllers/tag_controller");
 const scrapsController = require('./scraps_router');
-const recommentContorller = require("./recommend_router");
+const recommentRouter = require("./recommend_router");
+const postController = require("../controllers/post_controller");
 
 const router = express.Router();
 
@@ -19,6 +20,7 @@ router.use("/comment", commentRouter);
 router.use("/ranking", rankingRouter);
 router.get("/tags", tagController.tagSearch);
 router.use("/scraps", scrapsController);
-router.use("/recommend", recommentContorller);
+router.use("/recommend", recommentRouter);
+router.get("/main", postController.getEvnetPostList);
 
 module.exports = router;

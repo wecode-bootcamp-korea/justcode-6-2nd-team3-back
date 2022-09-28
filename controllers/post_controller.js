@@ -99,4 +99,14 @@ const selectPostList = async (req, res) => {
   }
 }
 
-module.exports = { insertPost, selectPostOne, updatePost, deletePost, selectPostList }
+const getEvnetPostList = async (req, res) => {
+  try {
+    const events = await postService.getEvnetPostList();
+
+    return res.status(200).json( { events } );
+  } catch (err) {
+    res.status(err.status || 500).json(err.message);
+  }
+}
+
+module.exports = { insertPost, selectPostOne, updatePost, deletePost, selectPostList, getEvnetPostList }

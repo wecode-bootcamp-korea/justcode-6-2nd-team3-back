@@ -146,4 +146,8 @@ const selectPostList = async params => {
   return {posts, page_count};
 }
 
-module.exports = { insertPost, selectPostOne, updatePost, deletePost, selectPostList }
+const getEvnetPostList = async () => {
+  return await postDao.getEvnetPostList();
+}
+
+module.exports = { insertPost, selectPostOne, updatePost, deletePost, selectPostList, getEvnetPostList }
