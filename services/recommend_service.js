@@ -33,14 +33,18 @@ const getRecommendCount = async params => {
 
 // 댓글&게시글 추천/비추천 
 const recommendAdd = async (params, user_id) => {
+  
+  await recommendDao.recommendAdd(user_id, params.uid, setTableName(params.table_type), setColumnName(params.table_type), params.recommend_type); 
 
-  await recommendDao.recommendAdd(user_id, params.uid, setTableName(params.table_type), setColumnName(params.table_type), params.recommend_type);  
+  return await recommendDao.getRecommendCount(params.uid, setTableName(params.table_type), setColumnName(params.table_type));
 }
 
 // 댓글&게시글 추천/비추천 취소
 const recommendCancel = async (params, user_id) => {
   
   await recommendDao.recommendCancel(user_id, params.uid, setTableName(params.table_type), setColumnName(params.table_type), params.recommend_type);
+
+  return await recommendDao.getRecommendCount(params.uid, setTableName(params.table_type), setColumnName(params.table_type));
 }
 
 module.exports = { getRecommendCount, recommendAdd, recommendCancel }
