@@ -13,8 +13,8 @@ const userProfile = async (user_id) => {
   }
 
   try{
-    const userTags  = JSON.parse(user.tags)
-    user.tags = userTags
+    // const userTags  = JSON.parse(user.tags)
+    // user.tags = userTags
     if(user.profile_image){
       const url = "http://localhost:8000/file"+ user.profile_image
       user.profile_image = url
@@ -29,11 +29,11 @@ const userProfile = async (user_id) => {
 // 사용자 프로필 수정
 const userProfileUpdate = async (id, user_name, nickname, tags)=>{
   const resultByNickname = await userDao.getUserByNickname(nickname);
-  if(resultByNickname){
-    const error = new Error({ message: "USER_NICKNAME_DUPLICATE"}.message);
-    error.statusCode = 400;
-    throw error;
-  }
+  // if(resultByNickname){
+  //   const error = new Error({ message: "USER_NICKNAME_DUPLICATE"}.message);
+  //   error.statusCode = 400;
+  //   throw error;
+  // }
 
   try{
     await userProfileDao.userUpdate(id, user_name, nickname);
@@ -50,8 +50,8 @@ const userProfileUpdate = async (id, user_name, nickname, tags)=>{
       }
     }
     const user = await userProfileDao.getUserProfile(id);
-    const userTags  = JSON.parse(user.tags)
-    user.tags = userTags
+    // const userTags  = JSON.parse(user.tags)
+    // user.tags = userTags
     if(user.profile_image){
       const url = "http://localhost:8000/file"+ user.profile_image
       user.profile_image = url
@@ -77,8 +77,8 @@ const userProfileImageUpdate = async (image, id)=>{
     }
     await userProfileDao.profileImageUpdate(image, id);
     const userResult = await userProfileDao.getUserProfile(id);
-    const userTags  = JSON.parse(userResult.tags)
-    userResult.tags = userTags
+    // const userTags  = JSON.parse(userResult.tags)
+    // userResult.tags = userTags
     if(userResult.profile_image){
       const url = "http://localhost:8000/file"+ userResult.profile_image
       userResult.profile_image = url
@@ -89,8 +89,13 @@ const userProfileImageUpdate = async (image, id)=>{
   }
 }
 
+const getUserProfileInfo = async (user_id) => {
+  return await userProfileDao.getUserProfileInfo(user_id);
+}
+
 module.exports = { 
   userProfile
   , userProfileImageUpdate
   , userProfileUpdate
+  , getUserProfileInfo
 };

@@ -10,7 +10,7 @@ const getRecommendCount = async (req, res) => {
 
     const recommendCount = await recommendService.getRecommendCount(params);
 
-    return res.status(200).json(recommendCount);
+    return res.status(200).json( recommendCount );
   } catch (err) {
     res.status(err.status || 500).json(err.message);
   }
@@ -27,7 +27,7 @@ const recommendAdd = async (req, res) => {
     // await recommendService.recommendAdd(params, unique_id);
     const recommendCount = await recommendService.recommendAdd(params, unique_id);
 
-    return res.status(201).json({ recommendCount: recommendCount, message: 'recommend add success' });
+    return res.status(200).json({ recommendCount: recommendCount, message: table_type + 'recommend add success' });
   } catch (err) {
     res.status(err.status || 500).json(err.message);
   }
@@ -43,7 +43,7 @@ const recommendCancel = async (req, res) => {
     const params = { table_type, uid, recommend_type }
     const recommendCount = await recommendService.recommendCancel(params, unique_id);
 
-    return res.status(201).json({ recommendCount: recommendCount, message: 'recommend cancle success' });
+    return res.status(200).json({ recommendCount: recommendCount, message: table_type + 'recommend cancle success' });
   } catch (err) {
     res.status(err.status || 500).json(err.message);
   }

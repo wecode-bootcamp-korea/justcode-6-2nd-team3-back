@@ -6,6 +6,6 @@ const router = express.Router();
 
 router.post('/:post_id', validateToken.validateToken, scrapsController.addPostScraps);
 router.delete('/:post_id', validateToken.validateToken, scrapsController.deletePostScraps);
-router.get('', scrapsController.selectPostScraps);
+router.get('/:user_id', scrapsController.selectPostScraps);
 
 module.exports = router;

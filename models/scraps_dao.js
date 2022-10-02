@@ -18,8 +18,9 @@ const selectPostScraps = async(user_id) => {
   const scraps = await myDataSource.query(
     `SELECT 
     sub_category.sub_category_name,
+    posts.unique_id,
     posts.title,
-    scraps.create_at
+    DATE_FORMAT(scraps.create_at, '%Y-%m-%d') AS create_at
     FROM scraps
     LEFT JOIN posts ON scraps.post_id = posts.unique_id
     LEFT JOIN sub_category ON posts.sub_category_id = sub_category.unique_id

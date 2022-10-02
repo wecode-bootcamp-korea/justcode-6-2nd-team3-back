@@ -28,10 +28,10 @@ const deletePostScraps = async(req, res) => {
 }
 
 const selectPostScraps = async(req, res) => {
-  const { authorization  } = req.headers;
+  const {user_id} = req.params;
 
   try{
-    const scraps = await scrapsService.selectPostScraps(authorization );
+    const scraps = await scrapsService.selectPostScraps(user_id);
 
     return res.status(200).json({ scraps });
   } catch (err) {

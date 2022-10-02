@@ -70,5 +70,16 @@ const userProfileImageUpdate = async (req, res) => {
 
 } 
 
+const getUserProfileInfo = async (req, res) => {
+    const { user_id } = req.params;
 
-module.exports = {userProfile, userProfileUpdate, userProfileImageUpdate };
+    try {
+        const data = await userProfileService.getUserProfileInfo(user_id);
+        res.status(200).json({user : data })
+    } catch (err) {
+        res.status(err.statusCode || 500).json({message:err.message})
+    }
+}
+
+
+module.exports = {userProfile, userProfileUpdate, userProfileImageUpdate, getUserProfileInfo };

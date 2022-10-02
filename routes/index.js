@@ -9,6 +9,7 @@ const tagController = require("../controllers/tag_controller");
 const scrapsController = require('./scraps_router');
 const recommentRouter = require("./recommend_router");
 const postController = require("../controllers/post_controller");
+const userProfileController = require("../controllers/user_profile_controller");
 
 const router = express.Router();
 
@@ -22,5 +23,7 @@ router.get("/tags", tagController.tagSearch);
 router.use("/scraps", scrapsController);
 router.use("/recommend", recommentRouter);
 router.get("/main", postController.getEvnetPostList);
+router.get("/profile/:user_id", postController.selectPostList);
+router.get("/userinfo/:user_id", userProfileController.getUserProfileInfo);
 
 module.exports = router;

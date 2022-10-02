@@ -79,6 +79,22 @@ const userTagInsert = async (id, tag_id)=>{
   );
 }
 
+const getUserProfileInfo = async (user_id) => {
+  return await myDataSource.query(
+    `SELECT 
+    users.unique_id,
+    users.id,
+    users.nickname,
+    CONCAT('http://localhost:8000/file', users.profile_image) AS profile_image,
+    user_scores.score
+    FROM users
+    LEFT JOIN user_scores ON users.unique_id = user_scores.user_id
+    WHERE user_id = ?`,
+    [user_id]
+  )
+}
+
+
 module.exports = {
   getUserProfile
   , profileImageUpdate
@@ -88,4 +104,5 @@ module.exports = {
   , getTagId
   , createTag
   , userTagInsert
+  , getUserProfileInfo
 };

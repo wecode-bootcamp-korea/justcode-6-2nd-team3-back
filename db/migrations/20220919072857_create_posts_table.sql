@@ -15,6 +15,7 @@ CREATE TABLE posts (
   title VARCHAR(100),
   content VARCHAR(3000),
   views  INT DEFAULT 0,
+  thumbnail VARCHAR(3000),
   create_at DATETIME DEFAULT NOW(),
   update_at DATETIME DEFAULT NOW() ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (main_category_id) REFERENCES main_category(unique_id) ON UPDATE CASCADE,

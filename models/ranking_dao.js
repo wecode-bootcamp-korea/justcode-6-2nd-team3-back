@@ -31,6 +31,7 @@ const getEditorChoice = async ()=>{
     return await myDataSource.query(`
     SELECT 
         p.unique_id
+        , u.unique_id as user_id
         , ANY_VALUE(p.title) AS title
         , ANY_VALUE(p.views) AS views
         , ANY_VALUE(u.nickname) AS nickname
@@ -49,16 +50,12 @@ const getEditorChoice = async ()=>{
             FROM post_recommend 
             WHERE post_id = p.unique_id
             AND recommend_type = 2) AS recommend_cnt
-        , concat(
-        '[',
-        GROUP_CONCAT(
-                JSON_OBJECT(
-                'tag_id', pt.unique_id,
-                'tag_name', t.tag_name
-                )
-            ),
-            ']'
-        ) as tags	
+        , JSON_ARRAYAGG(
+        	JSON_OBJECT(
+            'tag_id', pt.unique_id,
+            'tag_name', t.tag_name
+            )
+		) as tags	
     FROM posts p 
     JOIN users u ON u.unique_id = p.user_id
     JOIN user_scores us ON us.user_id = p.user_id 
@@ -77,6 +74,7 @@ const getWeeklyBest = async ()=>{
     return await myDataSource.query(`
     SELECT 
         p.unique_id
+        , u.unique_id as user_id
         , ANY_VALUE(p.title) AS title
         , ANY_VALUE(p.views) AS views
         , ANY_VALUE(u.nickname) AS nickname
@@ -95,16 +93,12 @@ const getWeeklyBest = async ()=>{
             FROM post_recommend 
             WHERE post_id = p.unique_id
             AND recommend_type = 2) AS recommend_cnt
-        , concat(
-        '[',
-        GROUP_CONCAT(
-                JSON_OBJECT(
-                'tag_id', pt.unique_id,
-                'tag_name', t.tag_name
-                )
-            ),
-            ']'
-        ) as tags	
+        , JSON_ARRAYAGG(
+            JSON_OBJECT(
+            'tag_id', pt.unique_id,
+            'tag_name', t.tag_name
+            )
+        ) as tags
     FROM posts p 
     JOIN users u ON u.unique_id = p.user_id
     JOIN user_scores us ON us.user_id = p.user_id 
