@@ -1,3 +1,4 @@
+const { query } = require('express');
 const { myDataSource } = require('./typeorm');
 
 // 게시글 작성
@@ -31,12 +32,11 @@ const selectPostOne = async (post_id) => {
     `SELECT 
     posts.unique_id,
     users.nickname,
-    users.profile_image,
+    CONCAT('http://localhost:8000/file', users.profile_image) AS profile_image,
     user_scores.score,
     posts.sub_category_id,
     sub_category.sub_category_name,
     companies.company_name,
-    companies.Business_registration_image,
     companies.introduction,
     DATE_FORMAT(posts.create_at, '%Y-%m-%d') AS create_at,
     posts.title,
@@ -71,33 +71,39 @@ const selectPostOne = async (post_id) => {
 }
 
 // 게시글 수정
-const updatePost = async (params, user_id) => {
+const updatePost = async (params, user_id, post_id) => {
   await myDataSource.query(
     `UPDATE posts SET sub_category_id = ?, title = ?, content = ? WHERE unique_id = ? AND user_id = ?`,
-    [params.sub_category_id, params.title, params.content, params.post_id, user_id]
+    [params.sub_category_id, params.title, params.content, post_id, user_id]
   );
 }
 
 // 구인 게시글 수정
-const updateJobsPost = async (params, user_id) => {
+const updateJobsPost = async (params, user_id, post_id) => {
   await myDataSource.query(
     `UPDATE posts SET position = ?, career = ?, region = ?, contract_type = ?, pay = ?, manager_name = ?, manager_tel = ?, manager_email = ?, title = ?, content = ? 
      WHERE unique_id = ? AND user_id = ?`,
     [params.position, params.career, params.region, params.contract_type, params.pay, params.manager_name, params.manager_tel, params.manager_email, 
-     params.title, params.content, params.post_id, user_id]
+     params.title, params.content, post_id, user_id]
   );
 }
 
 // 게시글 삭제
 const deletePost = async (user_id, post_id) => {
-  await myDataSource.query(
+  return await myDataSource.query(
     `DELETE FROM posts WHERE user_id = ? AND unique_id = ?`,
     [user_id, post_id]
   );
 }
 
+const checkPost = async (post_id, user_id) => {
+  return await myDataSource.query(`
+    SELECT * FROM posts WHERE unique_id = ?`,
+    [post_id])
+}
+
 // 게시글 목록 갯수 가지고오기
-const getPostCount = async (params, user_id) => {
+const getPostCount = async (params) => {
  let query = `
  SELECT
  COUNT(DISTINCT( posts.unique_id)) AS post_count
@@ -111,9 +117,10 @@ const getPostCount = async (params, user_id) => {
 
  let setParams = [];
 
- if(user_id) {
+ if(params.user_id) {
   condition = `WHERE posts.user_id = ? `;
-  setParams.push(user_id);
+  with_condition = `WHERE posts.user_id = ` + params.user_id ;
+  setParams.push(params.user_id);
 } 
 
 if(params.main_category_id) {
@@ -141,13 +148,10 @@ if(params.sub_category_id) {
 if(params.search_keyword) {
 
   if(!condition) {
-    condition = `WHERE posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
+    condition = `WHERE posts.title LIKE CONCAT('%','` + params.search_keyword + `','%')`;
   } else {
-    condition = condition + ` AND posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
+    condition = condition + ` AND posts.title LIKE CONCAT('%','` + params.search_keyword + `','%')`;
   }
-
-  setParams.push(params.search_keyword);
-
 } 
 
 query = query + condition;
@@ -157,7 +161,7 @@ return await myDataSource.query(query, setParams);
 }
 
 // 게시글 목록 읽기
-const selectPostList = async (params, user_id, corsur) => {
+const selectPostList = async (params, corsur) => {
   let with_select = `
   WITH pages AS (
     SELECT
@@ -187,10 +191,9 @@ const selectPostList = async (params, user_id, corsur) => {
   posts.unique_id,
   users.unique_id as user_id,
   users.nickname,
-  users.profile_image,
+  CONCAT('http://localhost:8000/file', users.profile_image) AS profile_image,
   user_scores.score,
   DATE_FORMAT(posts.create_at, '%Y-%m-%d') AS create_at,
-  posts.create_at,
   posts.title,
   sub_category.unique_id as sub_category_id,
   sub_category.sub_category_name,
@@ -210,14 +213,14 @@ const selectPostList = async (params, user_id, corsur) => {
   let condition = ``;
   let group_by = ` GROUP BY posts.unique_id `;
   let order_by = ` ORDER BY posts.create_at DESC`;
-  let limit = ` LIMIT `+params.limit;
+  let limit = ``;
 
   let setParams = [];
 
-  if(user_id) {
+  if(params.user_id) {
     condition = `WHERE posts.user_id = ? `;
-    with_condition = `WHERE posts.user_id = ` + user_id ;
-    setParams.push(user_id);
+    with_condition = `WHERE posts.user_id = ` + params.user_id ;
+    setParams.push(params.user_id);
   } 
 
   if(params.main_category_id) {
@@ -257,9 +260,9 @@ const selectPostList = async (params, user_id, corsur) => {
   if(params.search_keyword) {
 
     if(!condition) {
-      condition = `WHERE posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
+      condition = `WHERE posts.title LIKE CONCAT('%','` + params.search_keyword + `','%')`;
     } else {
-      condition = condition + ` AND posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
+      condition = condition + ` AND posts.title LIKE CONCAT('%','` + params.search_keyword + `','%')`;
     }
 
     if(!with_condition) {
@@ -267,9 +270,6 @@ const selectPostList = async (params, user_id, corsur) => {
     } else {
       with_condition = with_condition + ` AND posts.title LIKE CONCAT('%','` + params.search_keyword + `','%') `;
     }
-
-    setParams.push(params.search_keyword);
-
   } 
 
   if(params.filter) {
@@ -304,8 +304,11 @@ const selectPostList = async (params, user_id, corsur) => {
     setParams.push(corsur);
   }
 
-  let query = with_select + with_condition + with_group_by + with_order_by + select_query + condition + group_by + order_by + limit;
+  if(params.limit) {
+    limit = ` LIMIT `+params.limit;
+  }
 
+  let query = with_select + with_condition + with_group_by + with_order_by + select_query + condition + group_by + order_by + limit;
   return await myDataSource.query(query, setParams);
 }
 
@@ -355,49 +358,47 @@ const getJobsPostCount = async (params, user_id) => {
  if(params.search_keyword) {
  
    if(!condition) {
-     condition = `WHERE posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
+     condition = `WHERE posts.title LIKE CONCAT('%','` + params.search_keyword + `','%')`;
    } else {
-     condition = condition + ` AND posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
+     condition = condition + ` AND posts.title LIKE CONCAT('%','` + params.search_keyword + `','%')`;
    }
- 
-   setParams.push(params.search_keyword);
- 
+
  }
  
  if(params.filter) {
   if(!condition) {
     switch(params.filter) {
       case 'position' :
-        condition = `WHERE posts.position LIKE CONCAT('%',` + `?` + `,'%')`;
+        condition = `WHERE posts.position LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
         break;
       case 'career' :
-        condition = `WHERE posts.career LIKE CONCAT('%',` + `?` + `,'%')`;
+        condition = `WHERE posts.career LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
         break;
       case 'region' :
-        condition = `WHERE posts.region LIKE CONCAT('%',` + `?` + `,'%')`;
+        condition = `WHERE posts.region LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
         break;
       case 'contract_type' :
-        condition = `WHERE posts.contract_type LIKE CONCAT('%',` + `?` + `,'%')`;
+        condition = `WHERE posts.contract_type LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
         break;
     }
   } else {
     switch(params.filter) {
       case 'position' :
-        condition = condition + ` AND posts.position LIKE CONCAT('%',` + `?` + `,'%')`;
+        condition = condition + ` AND posts.position LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
         break;
       case 'career' :
-        condition = condition + ` AND posts.career LIKE CONCAT('%',` + `?` + `,'%')`;
+        condition = condition + ` AND posts.career LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
         break;
       case 'region' :
-        condition = condition + ` AND posts.region LIKE CONCAT('%',` + `?` + `,'%')`;
+        condition = condition + ` AND posts.region LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
         break;
       case 'contract_type' :
-        condition = condition + ` AND posts.contract_type LIKE CONCAT('%',` + `?` + `,'%')`;
+        condition = condition + ` AND posts.contract_type LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
         break;
     }
   }
 
-  setParams.push(params.filter_keyword);
+  // setParams.push(params.filter_keyword);
  }
 
  query = query + condition;
@@ -435,10 +436,9 @@ const selectJobsPostList = async (params, corsur) => {
   posts.unique_id,
   posts.create_at,
   posts.title,
+  CONCAT('http://localhost:8000/file', users.profile_image) AS profile_image,
   companies.company_name,
-  companies.Business_registration_image,
   DATE_FORMAT(posts.create_at, '%Y-%m-%d') AS create_at,
-  posts.create_at,
   posts.position,
   posts.region,
   posts.pay,
@@ -500,9 +500,9 @@ const selectJobsPostList = async (params, corsur) => {
   if(params.search_keyword) {
 
     if(!condition) {
-      condition = `WHERE posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
+      condition = `WHERE posts.title LIKE CONCAT('%','` + params.search_keyword + `','%')`;
     } else {
-      condition = condition + ` AND posts.title LIKE CONCAT('%',` + `?` + `,'%')`;
+      condition = condition + ` AND posts.title LIKE CONCAT('%','` + params.search_keyword + `','%')`;
     }
 
     if(!with_condition) {
@@ -511,39 +511,37 @@ const selectJobsPostList = async (params, corsur) => {
       with_condition = with_condition + ` AND posts.title LIKE CONCAT('%','` + params.search_keyword + `','%') `;
     }
 
-    setParams.push(params.search_keyword);
-
   } 
 
   if(params.filter) {
     if(!condition) {
       switch(params.filter) {
         case 'position' :
-          condition = `WHERE posts.position LIKE CONCAT('%',` + `?` + `,'%')`;
+          condition = `WHERE posts.position LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
           break;
         case 'career' :
-          condition = `WHERE posts.career LIKE CONCAT('%',` + `?` + `,'%')`;
+          condition = `WHERE posts.career LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
           break;
         case 'region' :
-          condition = `WHERE posts.region LIKE CONCAT('%',` + `?` + `,'%')`;
+          condition = `WHERE posts.region LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
           break;
         case 'contract_type' :
-          condition = `WHERE posts.contract_type LIKE CONCAT('%',` + `?` + `,'%')`;
+          condition = `WHERE posts.contract_type LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
           break;
       }
     } else {
       switch(params.filter) {
         case 'position' :
-          condition = condition + ` AND posts.position LIKE CONCAT('%',` + `?` + `,'%')`;
+          condition = condition + ` AND posts.position LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
           break;
         case 'career' :
-          condition = condition + ` AND posts.career LIKE CONCAT('%',` + `?` + `,'%')`;
+          condition = condition + ` AND posts.career LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
           break;
         case 'region' :
-          condition = condition + ` AND posts.region LIKE CONCAT('%',` + `?` + `,'%')`;
+          condition = condition + ` AND posts.region LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
           break;
         case 'contract_type' :
-          condition = condition + ` AND posts.contract_type LIKE CONCAT('%',` + `?` + `,'%')`;
+          condition = condition + ` AND posts.contract_type LIKE CONCAT('%','` + params.filter_keyword + `','%')`;
           break;
       }
     }
@@ -580,7 +578,7 @@ const selectJobsPostList = async (params, corsur) => {
       }
     }
   
-    setParams.push(params.filter_keyword);
+    // setParams.push(params.filter_keyword);
    }
 
   if(corsur) {
@@ -594,7 +592,7 @@ const selectJobsPostList = async (params, corsur) => {
   }
 
   let query = with_select + with_condition + with_group_by + with_order_by + select_query + condition + group_by + order_by + limit;
-
+  
   return await myDataSource.query(query, setParams);
 }
 
@@ -603,7 +601,12 @@ const postViewsCount = async (post_id) => {
 }
 
 const getEvnetPostList = async () => {
-  return await myDataSource.query(`SELECT posts.title, DATE_FORMAT(posts.create_at, '%Y-%m-%d') AS create_at, users.nickname
+  return await myDataSource.query(`SELECT 
+  posts.unique_id,
+  posts.title, 
+  DATE_FORMAT(posts.create_at, '%Y-%m-%d') AS create_at, 
+  users.nickname,
+  CONCAT('http://localhost:8000/file', posts.thumbnail) AS thumbnail
   FROM posts
   LEFT JOIN users ON posts.user_id = users.unique_id
   LEFT JOIN main_category ON posts.main_category_id = main_category.unique_id
@@ -624,4 +627,5 @@ module.exports = { insertPost,
   selectJobsPostList,
   getPostCount,
   getJobsPostCount,
-  getEvnetPostList }
+  getEvnetPostList,
+  checkPost }

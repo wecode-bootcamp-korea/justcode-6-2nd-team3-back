@@ -2,6 +2,9 @@ const jwt = require('jsonwebtoken');
 
 const postDao = require('../models/post_dao');
 const postTagsDao = require('../models/post_tags_dao');
+const scrapsDao = require('../models/scraps_dao');
+const recommendDao = require('../models/recommend_dao');
+const commentDao = require('../models/comment_dao');
 const menuDao = require('../models/menu_dao');
 const scoreDao = require('../models/user_scores_dao');
 const userDao = require('../models/user_dao');
@@ -28,7 +31,7 @@ const insertPost = async (params, user_id) => {
     err_msg = '관리자만 작성 가능합니다.'
   }
 
-  if(sub_category_name[0].sub_category_name !== '공지사항' || sub_category_name[0].sub_category_name !== '구인') {
+  if(sub_category_name[0].sub_category_name != '구인' && sub_category_name[0].sub_category_name != '공지사항') {
     post_id = await postDao.insertPost(params, user_id);
   }
 
@@ -54,28 +57,29 @@ const insertPost = async (params, user_id) => {
 const selectPostOne = async (post_id) => {
   postDao.postViewsCount(post_id);
   const post = await postDao.selectPostOne(post_id);
-
-  for(let i = 0; i<post.length; i++){
-    post[i].profile_image = "http://localhost:8000/file"+ post[i].profile_image;
-    post[i].Business_registration_image = "http://localhost:8000/file"+ post[i].Business_registration_image;
-  }
-
   return post;
 }
 
 // 게시글 수정
-const updatePost = async (params, user_id) => {
+const updatePost = async (params, user_id, post_id) => {
 
   const sub_category_name = await menuDao.selectSubCategoryName(params.sub_category_id);
 
-  if(sub_category_name[0].sub_category_name === '구인'){   // 구인 게시판 게시글 수정
-    await postDao.updateJobsPost(params, user_id);
-  } 
-  else {
-    await postDao.updatePost(params, user_id);
+  const user_check = await postDao.checkPost(post_id);
+  if(user_id != user_check[0].user_id) {
+    const error = new Error({ message: "게시글 작성자가 아닙니다."}.message);
+        error.statusCode = 400;
+        throw error;
   }
 
-  await postTagsDao.deletePostTags(params.post_id);
+  if(sub_category_name[0].sub_category_name === '구인'){   // 구인 게시판 게시글 수정
+    await postDao.updateJobsPost(params, user_id, post_id);
+  } 
+  else {
+    await postDao.updatePost(params, user_id, post_id);
+  }
+
+  await postTagsDao.deletePostTags(post_id);
   // const tagArray  = JSON.parse(params.tags);
   const tagArray  = params.tags;
   if(tagArray.length>0){
@@ -91,9 +95,28 @@ const updatePost = async (params, user_id) => {
 }
 
 // 게시글 삭제
-const deletePost = async (post_id, user_id) => {
+const deletePost = async (user_id, post_id) => {
+
+  const user_check = await postDao.checkPost(post_id);
+  if(user_id != user_check[0].user_id) {
+    const error = new Error({ message: "게시글 작성자가 아닙니다."}.message);
+        error.statusCode = 400;
+        throw error;
+  }
+ 
   await postTagsDao.deletePostTags(post_id);
+  await scrapsDao.deletePostScraps(post_id, user_id);
+  await recommendDao.recommendCancel(user_id, post_id, 'post_recommend', 'post_id', '')
+  await commentDao.commentAllDelete(post_id);
+  
   await postDao.deletePost(user_id, post_id);
+
+  const check = await postDao.checkPost(post_id);
+  if(check.length == 1) {
+    const error = new Error({ message: "post delete fail"}.message);
+        error.statusCode = 400;
+        throw error;
+  }
 }
 
 // 게시글 목록 읽기
@@ -101,11 +124,6 @@ const selectPostList = async params => {
 
   let corsur = '';
   let page_count = '';
-  
-  let user_id = "";
-  if(params.authorization ) {
-    user_id = jwt.verify(params.authorization, 'server_made_secret_key').userId;
-  }
 
   let sub_category_name = ['일반'];
   if(params.sub_category_id) {
@@ -115,7 +133,6 @@ const selectPostList = async params => {
   let posts = '';
 
   if(sub_category_name[0].sub_category_name === '구인'){   
-    console.log('구인 ~~~ ');
     page_count = await postDao.getJobsPostCount(params);
     
     if(params.page) {
@@ -126,7 +143,6 @@ const selectPostList = async params => {
 
     posts = await postDao.selectJobsPostList(params, corsur);
   } else {
-    console.log('QNA~~~ ');
     page_count = await postDao.getPostCount(params);
 
     if(params.page) {
@@ -135,19 +151,15 @@ const selectPostList = async params => {
       } 
     }
     
-    posts = await postDao.selectPostList(params, user_id, corsur);
+    posts = await postDao.selectPostList(params, corsur);
   }
-
-  for(let i = 0; i<posts.length; i++){
-    posts[i].profile_image = "http://localhost:8000/file"+ posts[i].profile_image;
-    posts[i].Business_registration_image = "http://localhost:8000/file"+ posts[i].Business_registration_image;
-  }
-
   return {posts, page_count};
 }
 
 const getEvnetPostList = async () => {
-  return await postDao.getEvnetPostList();
+  const evnetPostList = await postDao.getEvnetPostList();
+
+  return evnetPostList;
 }
 
 module.exports = { insertPost, selectPostOne, updatePost, deletePost, selectPostList, getEvnetPostList }

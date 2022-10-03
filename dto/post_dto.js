@@ -33,7 +33,15 @@ const getPostHaskey = () => {
   return {
     main_category_id:false, 
     sub_category_id:false, 
-    title:false, 
+    title:false,
+    content:false
+  }
+}
+
+const getPostHaskeyByUpdate = () => {
+  return {
+    sub_category_id:false, 
+    title:false,
     content:false
   }
 }
@@ -56,5 +64,5 @@ const getPostValue = () => {
   }
 }
 
-module.exports = { setPostDto, getPostHaskey, getPostValue}
+module.exports = { setPostDto, getPostHaskey, getPostHaskeyByUpdate, getPostValue}
 

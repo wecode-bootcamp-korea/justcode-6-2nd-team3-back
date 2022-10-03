@@ -51,17 +51,18 @@ const selectPostOne = async (req, res) => {
 // 게시글 수정
 const updatePost = async (req, res) => {
   const {unique_id} =  req.foundUser;
+  const { post_id } = req.params;
   postDto.setPostDto(req.body);
 
   const params = postDto.getPostValue();
-  let err = validatorValues(params, postDto.getPostHaskey());
+  let err = validatorValues(params, postDto.getPostHaskeyByUpdate());
 
   if(err) {
         return res.status(400).json({ message: err });
   }
 
   try{
-    await postService.updatePost(params, unique_id);
+    await postService.updatePost(params, unique_id, post_id);
 
     return res.status(200).json({ message: 'post update success' });
   } catch (err) {
@@ -76,8 +77,7 @@ const deletePost = async (req, res) => {
 
   try{
     await postService.deletePost(unique_id, post_id);
-
-    return res.status(200).json({ message: 'post delete success' });
+    return res.status(200).json({ message: 'post delete success' });  
   } catch (err) {
     res.status(err.status || 500).json(err.message);
   }
@@ -86,11 +86,11 @@ const deletePost = async (req, res) => {
 
 // 게시글 목록 읽기
 const selectPostList = async (req, res) => {
-  const { authorization } = req.headers;
+  const { user_id } = req.params;
   const { main_category_id, sub_category_id, search_keyword, filter, page, limit, filter_keyword} = req.query
 
   try{
-    const params = {authorization, main_category_id, sub_category_id, search_keyword, filter, page, limit, filter_keyword };
+    const params = {main_category_id, sub_category_id, search_keyword, filter, page, limit, filter_keyword, user_id};
     const posts = await postService.selectPostList(params);
 
     return res.status(200).json( { posts } );

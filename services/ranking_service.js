@@ -22,10 +22,10 @@ const editorChoice = async () => {
             const url = "http://localhost:8000/file"+ EditorChoice[i].profile_image
             EditorChoice[i].profile_image = url
         }  
-        if(EditorChoice[i].tags.length>0){
-            const userTags  = JSON.parse(EditorChoice[i].tags)
-            EditorChoice[i].tags = userTags
-        }
+        // if(EditorChoice[i].tags.length>0){
+        //     const userTags  = JSON.parse(EditorChoice[i].tags)
+        //     EditorChoice[i].tags = userTags
+        // }
     }
     return EditorChoice
 }
@@ -38,10 +38,10 @@ const weeklyBest = async () => {
             const url = "http://localhost:8000/file"+ WeeklyBest[i].profile_image
             WeeklyBest[i].profile_image = url
         }  
-        if(WeeklyBest[i].tags.length>0){
-            const userTags  = JSON.parse(WeeklyBest[i].tags)
-            WeeklyBest[i].tags = userTags
-        }
+        // if(WeeklyBest[i].tags.length>0){
+        //     const userTags  = JSON.parse(WeeklyBest[i].tags)
+        //     WeeklyBest[i].tags = userTags
+        // }
     }
     return WeeklyBest
 }
